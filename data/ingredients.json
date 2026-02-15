@@ -1,0 +1,527 @@
+[
+  {
+    "id": 23572,
+    "name": "beef",
+    "price_usd": 0.66,
+    "price_vnd": 16480,
+    "calories": 216,
+    "category": "Frozen;Meat",
+    "unit": "serving"
+  },
+  {
+    "id": 10010219,
+    "name": "pork",
+    "price_usd": 0.01,
+    "price_vnd": 195,
+    "calories": 3,
+    "category": "Meat",
+    "unit": "serving"
+  },
+  {
+    "id": 4542,
+    "name": "chicken fat",
+    "price_usd": 0.02,
+    "price_vnd": 448,
+    "calories": 9,
+    "category": "Meat",
+    "unit": "serving"
+  },
+  {
+    "id": 15270,
+    "name": "shrimp",
+    "price_usd": 0.02,
+    "price_vnd": 500,
+    "calories": 1,
+    "category": "Seafood",
+    "unit": "serving"
+  },
+  {
+    "id": 15076,
+    "name": "salmon",
+    "price_usd": 3.77,
+    "price_vnd": 94350,
+    "calories": 241,
+    "category": "Seafood",
+    "unit": "serving"
+  },
+  {
+    "id": 16213,
+    "name": "tofu",
+    "price_usd": 0.79,
+    "price_vnd": 19677,
+    "calories": 97,
+    "category": "Refrigerated;Produce;Ethnic Foods",
+    "unit": "serving"
+  },
+  {
+    "id": 1123,
+    "name": "egg",
+    "price_usd": 0.24,
+    "price_vnd": 6000,
+    "calories": 63,
+    "category": "Milk, Eggs, Other Dairy",
+    "unit": "serving"
+  },
+  {
+    "id": 10023572,
+    "name": "ground chuck",
+    "price_usd": 0.66,
+    "price_vnd": 16480,
+    "calories": 216,
+    "category": "Meat",
+    "unit": "serving"
+  },
+  {
+    "id": 5062,
+    "name": "chicken breast",
+    "price_usd": 2.0,
+    "price_vnd": 50097,
+    "calories": 258,
+    "category": "Meat",
+    "unit": "serving"
+  },
+  {
+    "id": 10123,
+    "name": "applewood smoked bacon",
+    "price_usd": 0.28,
+    "price_vnd": 7072,
+    "calories": 92,
+    "category": "Meat",
+    "unit": "serving"
+  },
+  {
+    "id": 10015121,
+    "name": "tuna",
+    "price_usd": 1.09,
+    "price_vnd": 27322,
+    "calories": 153,
+    "category": "Seafood",
+    "unit": "serving"
+  },
+  {
+    "id": 11529,
+    "name": "tomato",
+    "price_usd": 0.53,
+    "price_vnd": 13200,
+    "calories": 32,
+    "category": "Produce",
+    "unit": "serving"
+  },
+  {
+    "id": 11282,
+    "name": "onion",
+    "price_usd": 0.12,
+    "price_vnd": 3025,
+    "calories": 22,
+    "category": "Produce",
+    "unit": "serving"
+  },
+  {
+    "id": 11215,
+    "name": "garlic",
+    "price_usd": 0.07,
+    "price_vnd": 1667,
+    "calories": 4,
+    "category": "Produce",
+    "unit": "serving"
+  },
+  {
+    "id": 11216,
+    "name": "ginger",
+    "price_usd": 0.01,
+    "price_vnd": 278,
+    "calories": 2,
+    "category": "Produce;Ethnic Foods;Spices and Seasonings",
+    "unit": "serving"
+  },
+  {
+    "id": 11124,
+    "name": "carrot",
+    "price_usd": 0.11,
+    "price_vnd": 2810,
+    "calories": 26,
+    "category": "Produce",
+    "unit": "serving"
+  },
+  {
+    "id": 11352,
+    "name": "potato",
+    "price_usd": 0.2,
+    "price_vnd": 5000,
+    "calories": 116,
+    "category": "Produce",
+    "unit": "serving"
+  },
+  {
+    "id": 10211821,
+    "name": "bell pepper",
+    "price_usd": 0.37,
+    "price_vnd": 9355,
+    "calories": 19,
+    "category": "Produce",
+    "unit": "serving"
+  },
+  {
+    "id": 11260,
+    "name": "fresh mushrooms",
+    "price_usd": 0.01,
+    "price_vnd": 140,
+    "calories": 0,
+    "category": "Produce",
+    "unit": "serving"
+  },
+  {
+    "id": 10011457,
+    "name": "spinach",
+    "price_usd": 0.27,
+    "price_vnd": 6697,
+    "calories": 7,
+    "category": "Produce",
+    "unit": "serving"
+  },
+  {
+    "id": 11090,
+    "name": "broccoli",
+    "price_usd": 0.1,
+    "price_vnd": 2420,
+    "calories": 15,
+    "category": "Produce",
+    "unit": "serving"
+  },
+  {
+    "id": 11109,
+    "name": "cabbage",
+    "price_usd": 0.11,
+    "price_vnd": 2682,
+    "calories": 18,
+    "category": "Produce",
+    "unit": "serving"
+  },
+  {
+    "id": 11206,
+    "name": "cucumber",
+    "price_usd": 0.0,
+    "price_vnd": 60,
+    "calories": 0,
+    "category": "Produce",
+    "unit": "serving"
+  },
+  {
+    "id": 11168,
+    "name": "corn",
+    "price_usd": 0.19,
+    "price_vnd": 4812,
+    "calories": 74,
+    "category": "Produce",
+    "unit": "serving"
+  },
+  {
+    "id": 11252,
+    "name": "lettuce",
+    "price_usd": 0.33,
+    "price_vnd": 8215,
+    "calories": 12,
+    "category": "Produce",
+    "unit": "serving"
+  },
+  {
+    "id": 43391,
+    "name": "granulated sugar",
+    "price_vnd": 16000,
+    "calories": 259
+  },
+  {
+    "id": 12774,
+    "name": "raw vegetables",
+    "price_vnd": 149000,
+    "calories": 55
+  },
+  {
+    "id": 81552,
+    "name": "worcestershire sauce",
+    "price_vnd": 95000,
+    "calories": 214
+  },
+  {
+    "id": 74380,
+    "name": "sesame seed oil",
+    "price_vnd": 112000,
+    "calories": 62
+  },
+  {
+    "id": 69426,
+    "name": "olive oil",
+    "price_vnd": 74000,
+    "calories": 25
+  },
+  {
+    "id": 95557,
+    "name": "dry white wine",
+    "price_vnd": 40000,
+    "calories": 42
+  },
+  {
+    "id": 38641,
+    "name": "lemon",
+    "price_vnd": 150000,
+    "calories": 85
+  },
+  {
+    "id": 65704,
+    "name": "golden caster sugar",
+    "price_vnd": 93000,
+    "calories": 192
+  },
+  {
+    "id": 84831,
+    "name": "star anise",
+    "price_vnd": 94000,
+    "calories": 19
+  },
+  {
+    "id": 51399,
+    "name": "sake",
+    "price_vnd": 29000,
+    "calories": 206
+  },
+  {
+    "id": 40528,
+    "name": "bay leaves",
+    "price_vnd": 70000,
+    "calories": 231
+  },
+  {
+    "id": 73528,
+    "name": "salt",
+    "price_vnd": 69000,
+    "calories": 10
+  },
+  {
+    "id": 56453,
+    "name": "challots",
+    "price_vnd": 26000,
+    "calories": 229
+  },
+  {
+    "id": 38183,
+    "name": "penne rigate",
+    "price_vnd": 101000,
+    "calories": 216
+  },
+  {
+    "id": 93689,
+    "name": "mustard",
+    "price_vnd": 67000,
+    "calories": 88
+  },
+  {
+    "id": 80632,
+    "name": "caster sugar",
+    "price_vnd": 38000,
+    "calories": 139
+  },
+  {
+    "id": 57445,
+    "name": "chicken breasts",
+    "price_vnd": 117000,
+    "calories": 245
+  },
+  {
+    "id": 49074,
+    "name": "corn flour",
+    "price_vnd": 80000,
+    "calories": 185
+  },
+  {
+    "id": 30786,
+    "name": "mint",
+    "price_vnd": 123000,
+    "calories": 46
+  },
+  {
+    "id": 54845,
+    "name": "fettuccine",
+    "price_vnd": 132000,
+    "calories": 198
+  },
+  {
+    "id": 89560,
+    "name": "rice wine",
+    "price_vnd": 12000,
+    "calories": 220
+  },
+  {
+    "id": 40887,
+    "name": "dijon mustard",
+    "price_vnd": 62000,
+    "calories": 277
+  },
+  {
+    "id": 39836,
+    "name": "carrots",
+    "price_vnd": 150000,
+    "calories": 128
+  },
+  {
+    "id": 83684,
+    "name": "sushi rice",
+    "price_vnd": 87000,
+    "calories": 87
+  },
+  {
+    "id": 74157,
+    "name": "mozzarella",
+    "price_vnd": 47000,
+    "calories": 75
+  },
+  {
+    "id": 34047,
+    "name": "minced beef",
+    "price_vnd": 147000,
+    "calories": 51
+  },
+  {
+    "id": 82303,
+    "name": "spring onions",
+    "price_vnd": 132000,
+    "calories": 227
+  },
+  {
+    "id": 86842,
+    "name": "lime",
+    "price_vnd": 139000,
+    "calories": 38
+  },
+  {
+    "id": 39601,
+    "name": "parsley",
+    "price_vnd": 145000,
+    "calories": 275
+  },
+  {
+    "id": 94544,
+    "name": "parmigiano-reggiano",
+    "price_vnd": 59000,
+    "calories": 297
+  },
+  {
+    "id": 92817,
+    "name": "fish sauce",
+    "price_vnd": 78000,
+    "calories": 261
+  },
+  {
+    "id": 93061,
+    "name": "creme fraiche",
+    "price_vnd": 145000,
+    "calories": 257
+  },
+  {
+    "id": 28442,
+    "name": "udon noodles",
+    "price_vnd": 140000,
+    "calories": 283
+  },
+  {
+    "id": 79820,
+    "name": "sour cream",
+    "price_vnd": 149000,
+    "calories": 260
+  },
+  {
+    "id": 31598,
+    "name": "parmesan",
+    "price_vnd": 104000,
+    "calories": 295
+  },
+  {
+    "id": 11435,
+    "name": "balsamic vinegar",
+    "price_vnd": 114000,
+    "calories": 92
+  },
+  {
+    "id": 34113,
+    "name": "white fish",
+    "price_vnd": 18000,
+    "calories": 134
+  },
+  {
+    "id": 32875,
+    "name": "chilli powder",
+    "price_vnd": 144000,
+    "calories": 85
+  },
+  {
+    "id": 31739,
+    "name": "hummus",
+    "price_vnd": 140000,
+    "calories": 285
+  },
+  {
+    "id": 82025,
+    "name": "gruyère",
+    "price_vnd": 149000,
+    "calories": 141
+  },
+  {
+    "id": 95702,
+    "name": "coriander",
+    "price_vnd": 30000,
+    "calories": 74
+  },
+  {
+    "id": 80631,
+    "name": "basil leaves",
+    "price_vnd": 107000,
+    "calories": 46
+  },
+  {
+    "id": 64015,
+    "name": "celery",
+    "price_vnd": 134000,
+    "calories": 211
+  },
+  {
+    "id": 73977,
+    "name": "rice vinegar",
+    "price_vnd": 101000,
+    "calories": 288
+  },
+  {
+    "id": 72088,
+    "name": "lean minced beef",
+    "price_vnd": 150000,
+    "calories": 111
+  },
+  {
+    "id": 43467,
+    "name": "bread",
+    "price_vnd": 113000,
+    "calories": 104
+  },
+  {
+    "id": 99428,
+    "name": "tomato puree",
+    "price_vnd": 59000,
+    "calories": 287
+  },
+  {
+    "id": 13625,
+    "name": "water",
+    "price_vnd": 41000,
+    "calories": 283
+  },
+  {
+    "id": 89411,
+    "name": "birds-eye chillies",
+    "price_vnd": 97000,
+    "calories": 79
+  },
+  {
+    "id": 21345,
+    "name": "cardamom",
+    "price_vnd": 92000,
+    "calories": 124
+  }
+]
