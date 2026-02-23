@@ -1,0 +1,100 @@
+[
+    {
+        "rule_id": "R_STOMACH",
+        "antecedents": [
+            "condition:stomachache"
+        ],
+        "consequents": [
+            "exclude_ingredient:chili",
+            "exclude_ingredient:lemon",
+            "exclude_ingredient:garlic",
+            "exclude_ingredient:tomato",
+            "exclude_tag:spicy",
+            "exclude_tag:sour",
+            "warning:Stomachache: Avoid spicy food, acidic items (lemon, tomato), and sour food"
+        ]
+    },
+    {
+        "rule_id": "R_DIABETES",
+        "antecedents": [
+            "condition:diabetes"
+        ],
+        "consequents": [
+            "exclude_ingredient:sugar",
+            "exclude_tag:sweet",
+            "warning:Diabetes: Avoid sugar and refined carbs to prevent blood sugar spikes",
+            "recommend:Diabetics should consume high fiber (greens, mushrooms) and lean protein"
+        ]
+    },
+    {
+        "rule_id": "R_PREGNANCY",
+        "antecedents": [
+            "condition:pregnancy"
+        ],
+        "consequents": [
+            "exclude_ingredient:sashimi",
+            "exclude_ingredient:green papaya",
+            "exclude_tag:raw",
+            "warning:Pregnancy: Avoid raw foods or items causing uterine contractions"
+        ]
+    },
+    {
+        "rule_id": "R_HBP",
+        "antecedents": [
+            "condition:high blood pressure"
+        ],
+        "consequents": [
+            "exclude_ingredient:salt",
+            "exclude_ingredient:fish sauce",
+            "exclude_ingredient:cheese",
+            "exclude_tag:salty",
+            "exclude_tag:greasy",
+            "warning:High Blood Pressure: Limit salt, saturated fats (cheese, fatty meat) to reduce vascular pressure",
+            "recommend:Prefer steaming/boiling over frying for high blood pressure"
+        ]
+    },
+    {
+        "rule_id": "R_GOUT",
+        "antecedents": [
+            "condition:gout"
+        ],
+        "consequents": [
+            "exclude_ingredient:beef",
+            "exclude_ingredient:seafood",
+            "exclude_ingredient:shrimp",
+            "exclude_ingredient:squid",
+            "exclude_ingredient:mushroom",
+            "warning:Gout: Completely avoid red meat, organ meats, and high-purine seafood"
+        ]
+    },
+    {
+        "rule_id": "R_SEAFOOD_ALLERGY",
+        "antecedents": [
+            "condition:seafood allergy"
+        ],
+        "consequents": [
+            "exclude_ingredient:crab",
+            "exclude_ingredient:fish",
+            "exclude_ingredient:shrimp",
+            "exclude_ingredient:squid",
+            "exclude_tag:seafood",
+            "warning:Seafood Allergy: Strictly exclude shrimp, crab, fish, squid, and all marine products"
+        ]
+    },
+    {
+        "rule_id": "R_VEGETARIAN",
+        "antecedents": [
+            "preferences:vegetarian"
+        ],
+        "consequents": [
+            "exclude_ingredient:pork",
+            "exclude_ingredient:chicken",
+            "exclude_ingredient:beef",
+            "exclude_ingredient:fish",
+            "exclude_ingredient:shrimp",
+            "exclude_tag:meat",
+            "exclude_tag:seafood",
+            "warning:Vegetarian: No meat, fish, seafood, or slaughtered animal products allowed"
+        ]
+    }
+]
