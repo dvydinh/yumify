@@ -318,16 +318,12 @@ def _parse_kaggle_csv(csv_path: str, max_recipes: int = 5000) -> List[Dict[str, 
                     # ==========================================================
                     # COST COMPUTATION — Cross-reference with ingredients.json
                     # ==========================================================
-                    # Without this, recipe.get("cost", 0) returns 0 for ALL
-                    # Kaggle recipes, causing A* heuristic h(n) = 0 and
-                    # degenerating into blind search.
-                    #
-                    # Strategy: For each ingredient, find best match in DB
-                    # and sum up prices. If no match found, use category-based
-                    # default pricing.
+                    # price_usd in DB represents cost per standard unit (~1kg).
+                    # We scale by actual quantity: cost = price_per_kg * (qty_g / 1000)
                     total_cost = 0.0
                     for ing in ingredients:
                         ing_name = ing['name'].lower().strip()
+                        qty_g = ing.get('quantity', 80)
                         matched_price = None
 
                         # Exact match
@@ -341,22 +337,24 @@ def _parse_kaggle_csv(csv_path: str, max_recipes: int = 5000) -> List[Dict[str, 
                                     break
 
                         if matched_price is not None and matched_price > 0:
-                            total_cost += matched_price
+                            # Scale by quantity: price_per_kg * (grams / 1000)
+                            total_cost += matched_price * (qty_g / 1000.0)
                         else:
-                            # Default pricing by category (USDA-based estimates)
-                            qty = ing.get('quantity', 80)
-                            if qty >= 200:      # Meat
-                                total_cost += 1.50
-                            elif qty >= 150:    # Seafood/Grain
-                                total_cost += 1.00
-                            elif qty >= 100:    # Produce
-                                total_cost += 0.30
-                            elif qty >= 50:     # Dairy
-                                total_cost += 0.50
-                            else:               # Spice/Sauce
-                                total_cost += 0.10
+                            # Default pricing by category, scaled per gram
+                            # Rates: Meat ~$8/kg, Seafood ~$7/kg, Produce ~$3/kg,
+                            #         Dairy ~$5/kg, Spice ~$20/kg, Sauce ~$4/kg
+                            if qty_g >= 200:        # Meat
+                                total_cost += 8.0 * (qty_g / 1000.0)
+                            elif qty_g >= 150:      # Seafood/Grain
+                                total_cost += 6.0 * (qty_g / 1000.0)
+                            elif qty_g >= 100:      # Produce
+                                total_cost += 3.0 * (qty_g / 1000.0)
+                            elif qty_g >= 50:       # Dairy
+                                total_cost += 5.0 * (qty_g / 1000.0)
+                            else:                   # Spice/Sauce
+                                total_cost += 15.0 * (qty_g / 1000.0)
 
-                    # Ensure minimum cost (no recipe is truly free)
+                    # Minimum cost floor
                     total_cost = max(total_cost, 0.50)
 
                     recipes.append({
