@@ -1,10 +1,15 @@
 # Hệ thống AI gợi ý ẩm thực và tối ưu hóa ngân sách
 
 **Bài tập lớn môn học:** Nhập môn Trí tuệ Nhân tạo (Introduction to AI)
+
 **Mã môn học:** CO3061
+
 **Học kỳ:** II — Năm học 2025–2026
+
 **Trường:** Đại học Bách Khoa, ĐHQG-HCM
+
 **Giảng viên hướng dẫn:** TS. Trương Vĩnh Lân
+
 **GitHub repository:** [https://github.com/dvydinh/yumify](https://github.com/dvydinh/yumify)
 
 ---
