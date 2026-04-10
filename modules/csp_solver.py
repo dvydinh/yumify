@@ -224,11 +224,19 @@ class IngredientCSPSolver:
         of ALL remaining unassigned variables by removing values that would
         violate EITHER:
           1. Budget constraint: candidate_cost > remaining_budget
-          2. Calorie constraint: choosing this candidate would make it
-             impossible to reach a valid total calorie count.
+          2. Calorie constraint (BOTH bounds):
+             a. Upper bound: projected_cal + min_remaining_cal > max_cal
+                (Even if all OTHER remaining variables pick their minimum
+                calorie option, the total still exceeds maximum.)
+             b. Lower bound: projected_cal + max_remaining_cal < min_cal
+                (Even if all OTHER remaining variables pick their maximum
+                calorie option, the total still falls below minimum.)
 
-        This is the CRITICAL FIX: naive Forward Checking only prunes on
-        budget. We also prune on calorie bounds to maintain arc consistency.
+        CRITICAL FIX (per professor's feedback):
+            The original implementation assumed min_remaining_cal = 0,
+            which made the lower-bound check impossible and the upper-bound
+            check nearly useless. Now we pre-compute actual min/max calorie
+            contributions from each unassigned variable's domain.
 
         Args:
             variables: Current variable list with some assigned.
@@ -243,16 +251,48 @@ class IngredientCSPSolver:
         """
         min_cal, max_cal = calorie_range
 
-        # Count remaining unassigned variables (excluding the one just assigned)
+        # Identify unassigned variables (excluding the one just assigned)
         unassigned_indices = [
             i for i, v in enumerate(variables)
             if v.assigned is None and i != assigned_idx
         ]
-        n_remaining = len(unassigned_indices)
+
+        if not unassigned_indices:
+            return True
+
+        # ============================================================
+        # PRE-COMPUTE: min/max calorie contribution per unassigned var
+        # ============================================================
+        # For each unassigned variable j, compute:
+        #   min_cal_j = min(candidate.calories * var.quantity) over domain
+        #   max_cal_j = max(candidate.calories * var.quantity) over domain
+        min_cal_per_var = {}
+        max_cal_per_var = {}
+
+        for j in unassigned_indices:
+            var_j = variables[j]
+            if not var_j.domain:
+                return False  # Domain already empty
+
+            cals_in_domain = [
+                c.get("calories", 0) * var_j.quantity for c in var_j.domain
+            ]
+            min_cal_per_var[j] = min(cals_in_domain)
+            max_cal_per_var[j] = max(cals_in_domain)
+
+        # Total min/max over ALL unassigned variables
+        total_min_remaining = sum(min_cal_per_var.values())
+        total_max_remaining = sum(max_cal_per_var.values())
 
         for i in unassigned_indices:
             var = variables[i]
             pruned_domain = []
+
+            # Calorie bounds from OTHER unassigned variables (excluding i)
+            # other_min = total_min_remaining - min_cal_per_var[i]
+            # other_max = total_max_remaining - max_cal_per_var[i]
+            other_min = total_min_remaining - min_cal_per_var[i]
+            other_max = total_max_remaining - max_cal_per_var[i]
 
             for candidate in var.domain:
                 cost = candidate.get("price", 0) * var.quantity
@@ -267,20 +307,19 @@ class IngredientCSPSolver:
                 # ============================================================
                 # CONSTRAINT 2: Calorie feasibility (Bounds Propagation)
                 # ============================================================
-                # After choosing this candidate, can we still reach a
-                # valid total calorie count with the remaining variables?
-                #
-                # Optimistic estimate: assume all other remaining variables
-                # contribute 0 calories (minimum) or infinite (maximum).
-                # Therefore, we only check that THIS candidate's calories
-                # don't push us irrecoverably out of bounds.
-                #
-                # projected_cal = current_calories + this_cal
-                # For the total to be valid:
-                #   projected_cal <= max_cal  (can't already exceed max)
                 projected_cal = current_calories + cals
-                if projected_cal > max_cal:
-                    continue  # Prune: calories already exceed upper bound
+
+                # Upper bound check:
+                # If projected_cal + min calories from OTHER remaining vars
+                # already exceeds max_cal, this candidate is infeasible.
+                if projected_cal + other_min > max_cal:
+                    continue  # Prune: guaranteed to exceed calorie ceiling
+
+                # Lower bound check:
+                # If projected_cal + max calories from OTHER remaining vars
+                # still falls below min_cal, this candidate is infeasible.
+                if projected_cal + other_max < min_cal:
+                    continue  # Prune: guaranteed to miss calorie floor
 
                 # Keep this candidate
                 pruned_domain.append(candidate)
