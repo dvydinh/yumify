@@ -2,7 +2,7 @@
   {
     "id": 52771,
     "name": "Spicy Arrabiata Penne",
-    "cuisine": "Ý",
+    "cuisine": "Italian",
     "image": "https://www.themealdb.com/images/media/meals/ustsqw1468250014.jpg",
     "servings": 4,
     "ready_in_minutes": 45,
@@ -66,7 +66,7 @@
   {
     "id": 52844,
     "name": "Lasagne",
-    "cuisine": "Ý",
+    "cuisine": "Italian",
     "image": "https://www.themealdb.com/images/media/meals/wtsvxx1511296896.jpg",
     "servings": 4,
     "ready_in_minutes": 45,
@@ -165,7 +165,7 @@
   {
     "id": 53065,
     "name": "Sushi",
-    "cuisine": "Nhật Bản",
+    "cuisine": "Japanese",
     "image": "https://www.themealdb.com/images/media/meals/g046bb1663960946.jpg",
     "servings": 4,
     "ready_in_minutes": 45,
@@ -227,7 +227,7 @@
   {
     "id": 52773,
     "name": "Honey Teriyaki Salmon",
-    "cuisine": "Nhật Bản",
+    "cuisine": "Japanese",
     "image": "https://www.themealdb.com/images/media/meals/xxyupu1468262513.jpg",
     "servings": 4,
     "ready_in_minutes": 45,
@@ -277,7 +277,7 @@
   {
     "id": 52819,
     "name": "Cajun spiced fish tacos",
-    "cuisine": "Mexico",
+    "cuisine": "Mexican",
     "image": "https://www.themealdb.com/images/media/meals/uvuyxu1503067369.jpg",
     "servings": 4,
     "ready_in_minutes": 45,
@@ -363,7 +363,7 @@
   {
     "id": 53238,
     "name": "Beef pho",
-    "cuisine": "Việt Nam",
+    "cuisine": "Vietnamese",
     "image": "https://www.themealdb.com/images/media/meals/pbzcrx1763765096.jpg",
     "servings": 4,
     "ready_in_minutes": 45,
@@ -473,7 +473,7 @@
   {
     "id": 53211,
     "name": "Lemongrass beef stew with noodles",
-    "cuisine": "Phương Tây",
+    "cuisine": "Western",
     "image": "https://www.themealdb.com/images/media/meals/ntafxw1763586291.jpg",
     "servings": 4,
     "ready_in_minutes": 45,
@@ -561,7 +561,7 @@
   {
     "id": 53191,
     "name": "Pad Thai",
-    "cuisine": "Việt Nam",
+    "cuisine": "Vietnamese",
     "image": "https://www.themealdb.com/images/media/meals/rg9ze01763479093.jpg",
     "servings": 4,
     "ready_in_minutes": 40,
@@ -650,7 +650,7 @@
   {
     "id": 52831,
     "name": "Chicken Karaage",
-    "cuisine": "Nhật Bản",
+    "cuisine": "Japanese",
     "image": "https://www.themealdb.com/images/media/meals/tyywsw1505930373.jpg",
     "servings": 4,
     "ready_in_minutes": 40,
@@ -715,7 +715,7 @@
   {
     "id": 52765,
     "name": "Chicken Enchilada Casserole",
-    "cuisine": "Mexico",
+    "cuisine": "Mexican",
     "image": "https://www.themealdb.com/images/media/meals/qtuwxu1468233098.jpg",
     "servings": 4,
     "ready_in_minutes": 40,
@@ -761,7 +761,7 @@
   {
     "id": 52945,
     "name": "Kung Pao Chicken",
-    "cuisine": "Phương Tây",
+    "cuisine": "Western",
     "image": "https://www.themealdb.com/images/media/meals/1525872624.jpg",
     "servings": 4,
     "ready_in_minutes": 40,
@@ -846,7 +846,7 @@
   {
     "id": 53250,
     "name": "Vegan banh mi",
-    "cuisine": "Việt Nam",
+    "cuisine": "Vietnamese",
     "image": "https://www.themealdb.com/images/media/meals/sonirb1763782831.jpg",
     "servings": 4,
     "ready_in_minutes": 30,
@@ -913,7 +913,7 @@
   {
     "id": 53014,
     "name": "Pizza Express Margherita",
-    "cuisine": "Ý",
+    "cuisine": "Italian",
     "image": "https://www.themealdb.com/images/media/meals/x0lk931587671540.jpg",
     "servings": 4,
     "ready_in_minutes": 45,
@@ -994,7 +994,7 @@
   {
     "id": 52770,
     "name": "Spaghetti Bolognese",
-    "cuisine": "Ý",
+    "cuisine": "Italian",
     "image": "https://www.themealdb.com/images/media/meals/sutysw1468247559.jpg",
     "servings": 4,
     "ready_in_minutes": 30,
@@ -1075,7 +1075,7 @@
   {
     "id": 53064,
     "name": "Fettuccine Alfredo",
-    "cuisine": "Ý",
+    "cuisine": "Italian",
     "image": "https://www.themealdb.com/images/media/meals/0jv5gx1661040802.jpg",
     "servings": 4,
     "ready_in_minutes": 45,
@@ -1124,7 +1124,7 @@
   {
     "id": 53053,
     "name": "Beef Rendang",
-    "cuisine": "Nhật Bản",
+    "cuisine": "Japanese",
     "image": "https://www.themealdb.com/images/media/meals/bc8v651619789840.jpg",
     "servings": 4,
     "ready_in_minutes": 45,
@@ -1205,7 +1205,7 @@
   {
     "id": 52871,
     "name": "Yaki Udon",
-    "cuisine": "Nhật Bản",
+    "cuisine": "Japanese",
     "image": "https://www.themealdb.com/images/media/meals/wrustq1511475474.jpg",
     "servings": 4,
     "ready_in_minutes": 60,
@@ -1275,7 +1275,7 @@
   {
     "id": 52812,
     "name": "Beef Brisket Pot Roast",
-    "cuisine": "Hàn Quốc",
+    "cuisine": "Korean",
     "image": "https://www.themealdb.com/images/media/meals/ursuup1487348423.jpg",
     "servings": 4,
     "ready_in_minutes": 45,
@@ -1356,7 +1356,7 @@
   {
     "id": 52847,
     "name": "Pork Cassoulet",
-    "cuisine": "Mexico",
+    "cuisine": "Mexican",
     "image": "https://www.themealdb.com/images/media/meals/wxuvuv1511299147.jpg",
     "servings": 4,
     "ready_in_minutes": 45,
@@ -1457,7 +1457,7 @@
   {
     "id": 52839,
     "name": "Chilli prawn linguine",
-    "cuisine": "Mexico",
+    "cuisine": "Mexican",
     "image": "https://www.themealdb.com/images/media/meals/usywpp1511189717.jpg",
     "servings": 4,
     "ready_in_minutes": 30,
@@ -1545,7 +1545,7 @@
   {
     "id": 53280,
     "name": "Poulet Roti a l'Algerienne (Algerian Roast Chicken)",
-    "cuisine": "Phương Tây",
+    "cuisine": "Western",
     "image": "https://www.themealdb.com/images/media/meals/nlxald1764112200.jpg",
     "servings": 4,
     "ready_in_minutes": 30,
@@ -1616,7 +1616,7 @@
   {
     "id": 52903,
     "name": "French Onion Soup",
-    "cuisine": "Phương Tây",
+    "cuisine": "Western",
     "image": "https://www.themealdb.com/images/media/meals/xvrrux1511783685.jpg",
     "servings": 4,
     "ready_in_minutes": 30,
@@ -1687,7 +1687,7 @@
   {
     "id": 1111,
     "name": "Korean Fried Chicken",
-    "cuisine": "Hàn Quốc",
+    "cuisine": "Korean",
     "image": "",
     "servings": 4,
     "ready_in_minutes": 45,
@@ -1716,7 +1716,7 @@
   {
     "id": 2222,
     "name": "Mexican Taco Salad",
-    "cuisine": "Mexico",
+    "cuisine": "Mexican",
     "image": "",
     "servings": 2,
     "ready_in_minutes": 20,
@@ -1745,7 +1745,7 @@
   {
     "id": 3333,
     "name": "Italian Bruschetta",
-    "cuisine": "Ý",
+    "cuisine": "Italian",
     "image": "",
     "servings": 4,
     "ready_in_minutes": 15,
