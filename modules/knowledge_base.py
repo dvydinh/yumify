@@ -338,10 +338,29 @@ class DietaryKnowledgeBase:
         """
         initial_facts: Set[str] = set()
 
+        # --- NLP → KB key normalisation ---
+        # NLP may output different strings than what rules.json expects.
+        _CONDITION_MAP = {
+            "hypertension":    "high blood pressure",
+            "high_blood_pressure": "high blood pressure",
+            "hbp":             "high blood pressure",
+            "seafood_allergy": "seafood allergy",
+            "seafood allergy": "seafood allergy",
+        }
+        # Some NLP outputs are preferences, not medical conditions.
+        _PREF_ALIASES = {"vegetarian", "vegan", "halal", "kosher"}
+
         # Build initial Working Memory from user inputs
         if health_conditions:
             for cond in health_conditions:
-                initial_facts.add(f"condition:{cond}")
+                key = cond.strip().lower()
+                # Route preference-like conditions to the preferences channel
+                if key in _PREF_ALIASES:
+                    initial_facts.add(f"preferences:{key}")
+                    continue
+                # Normalise condition key
+                mapped = _CONDITION_MAP.get(key, key)
+                initial_facts.add(f"condition:{mapped}")
 
         if preferences:
             for pref in preferences:
