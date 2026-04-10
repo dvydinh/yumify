@@ -148,13 +148,75 @@ DIGESTIVE_RISK_CPT: Dict[str, Dict[str, Any]] = {
     "wasabi":       {"prior_risk": 0.30, "description": "Isothiocyanate gây kích ứng niêm mạc"},
 }
 
-# Interaction multipliers — khi nhiều yếu tố rủi ro kết hợp
-# Mô hình hóa conditional dependence giữa các Chance Nodes
-RISK_INTERACTION_MULTIPLIERS: List[Dict[str, Any]] = [
-    {"factors": ["spicy", "dầu"],    "multiplier": 1.3, "reason": "Cay + dầu gây kích ứng kép"},
-    {"factors": ["seafood", "spicy"],"multiplier": 1.2, "reason": "Hải sản cay tăng nguy cơ dị ứng"},
-    {"factors": ["sữa", "spicy"],    "multiplier": 1.15,"reason": "Casein + capsaicin khó tiêu hóa"},
-]
+# ============================================================================
+# JOINT RISK CPT — Conditional Dependence (replaces illegal multipliers)
+# ============================================================================
+# When multiple risk factors co-occur, their combined risk is NOT simply
+# the Noisy-OR of independent risks multiplied by a constant.
+# Instead, we define a proper Joint Conditional Probability Table:
+#   P(Risk | Factor_1 = T, Factor_2 = T)
+# These values are expert-elicited and satisfy P ∈ [0, 1].
+#
+# The combined risk is computed as:
+#   P_final = max(P_noisy_or, P_joint)
+# This is a conservative union that respects probability axioms.
+JOINT_RISK_CPT: Dict[frozenset, Dict[str, Any]] = {
+    frozenset({"spicy", "dầu"}): {
+        "joint_risk": 0.55,
+        "reason": "Cay + dầu gây kích ứng kép trên niêm mạc dạ dày"
+    },
+    frozenset({"ớt", "dầu"}): {
+        "joint_risk": 0.58,
+        "reason": "Capsaicin + dầu mỡ tăng nguy cơ trào ngược"
+    },
+    frozenset({"sa tế", "dầu"}): {
+        "joint_risk": 0.60,
+        "reason": "Sa tế chứa cả ớt lẫn dầu, gây kích ứng mạnh"
+    },
+    frozenset({"seafood", "spicy"}): {
+        "joint_risk": 0.50,
+        "reason": "Hải sản cay tăng nguy cơ phản ứng dị ứng"
+    },
+    frozenset({"seafood", "ớt"}): {
+        "joint_risk": 0.52,
+        "reason": "Hải sản + capsaicin tăng kích ứng tiêu hóa"
+    },
+    frozenset({"sữa", "spicy"}): {
+        "joint_risk": 0.45,
+        "reason": "Casein + capsaicin khó phân giải trong dạ dày"
+    },
+    frozenset({"sữa", "ớt"}): {
+        "joint_risk": 0.48,
+        "reason": "Lactose + capsaicin gây co thắt ruột"
+    },
+}
+
+# ============================================================================
+# HEALTH-CONDITIONAL RISK CPT — P(Risk | factor, health_condition)
+# ============================================================================
+# Instead of multiplying prior_risk * 1.5 (which can exceed 1.0 or violate
+# probability axioms), we define explicit conditional probabilities.
+# P(Risk | factor, condition) is directly specified by domain experts.
+HEALTH_CONDITIONAL_RISK_CPT: Dict[str, Dict[str, float]] = {
+    # P(Risk | factor, đau dạ dày)
+    "đau dạ dày": {
+        "spicy": 0.70,  "ớt": 0.75,  "sa tế": 0.80,
+        "tương ớt": 0.55, "dầu": 0.45, "chất béo": 0.45,
+        "gochujang": 0.65, "wasabi": 0.60,
+    },
+    # P(Risk | factor, gout)
+    "gout": {
+        "seafood": 0.70,
+    },
+    # P(Risk | factor, dị ứng gluten)
+    "dị ứng gluten": {
+        "gluten": 0.85,
+    },
+    # P(Risk | factor, dị ứng sữa)
+    "dị ứng sữa": {
+        "sữa": 0.80,
+    },
+}
 
 
 # ============================================================================
@@ -199,7 +261,8 @@ class BayesianRecipeEvaluator:
         self.prior_like = PRIOR_LIKE
         self.prior_not_like = PRIOR_NOT_LIKE
         self.risk_cpt = DIGESTIVE_RISK_CPT
-        self.interaction_multipliers = RISK_INTERACTION_MULTIPLIERS
+        self.joint_risk_cpt = JOINT_RISK_CPT
+        self.health_risk_cpt = HEALTH_CONDITIONAL_RISK_CPT
 
     # ------------------------------------------------------------------
     # Feature Extraction (Evidence Nodes)
@@ -357,22 +420,27 @@ class BayesianRecipeEvaluator:
         ingredients_db: Optional[List[Dict[str, Any]]] = None
     ) -> Tuple[float, List[Dict[str, Any]]]:
         """
-        Đánh giá rủi ro tiêu hóa sử dụng Independent Risk Model.
+        Đánh giá rủi ro tiêu hóa sử dụng Noisy-OR + Joint CPT.
 
-        Mô hình xác suất (Noisy-OR approximation):
-            P(Risk) = 1 - ∏ᵢ (1 - P(Riskᵢ))
+        Mô hình xác suất:
 
-        Giải thích: Nếu mỗi yếu tố rủi ro i gây nguy hiểm với xác suất
-        P(Riskᵢ) một cách ĐỘC LẬP, thì xác suất KHÔNG có rủi ro nào
-        xảy ra là ∏(1 - P(Riskᵢ)). Xác suất có ÍT NHẤT MỘT rủi ro
-        chính là phần bù.
+        Bước 1 — Noisy-OR (Independent Risk Model):
+            P_indep(Risk) = 1 - ∏ᵢ (1 - P(Riskᵢ))
 
-        Sau khi tính P(Risk) cơ bản, áp dụng interaction multipliers
-        để mô hình hóa conditional dependence giữa các yếu tố kết hợp.
+        Bước 2 — Joint CPT Correction (Conditional Dependence):
+            Nếu tổ hợp factors (A, B) xuất hiện đồng thời:
+                P_joint = JOINT_RISK_CPT[{A, B}]
+                P_final = max(P_indep, P_joint)
+            Phép max() thỏa mãn tiên đề xác suất: P_final ∈ [0, 1]
+            vì cả P_indep và P_joint đều ∈ [0, 1].
+
+        Bước 3 — Health Condition CPT:
+            P(Risk | factor, condition) tra từ HEALTH_CONDITIONAL_RISK_CPT
+            thay vì nhân prior_risk với hằng số (vi phạm Kolmogorov).
 
         Args:
             recipe: Công thức nấu ăn
-            health_conditions: Tình trạng sức khỏe (tăng sensitivity)
+            health_conditions: Tình trạng sức khỏe
             ingredients_db: Unused (API compatibility)
 
         Returns:
@@ -386,50 +454,58 @@ class BayesianRecipeEvaluator:
             recipe_text_parts.append(tag.lower())
         recipe_text = " ".join(recipe_text_parts)
 
-        # Detect risk factors by scanning CPT entries against recipe
+        # ============================================================
+        # STEP 1: Detect individual risk factors and compute Noisy-OR
+        # ============================================================
         found_risks = []
+        detected_factor_names = set()  # Track which factors are present
         survival_product = 1.0  # ∏(1 - P(risk_i))
 
         for factor, info in self.risk_cpt.items():
             if factor in recipe_text:
-                prior_risk = info["prior_risk"]
+                risk_prob = info["prior_risk"]
 
-                # Health condition sensitivity multiplier
-                # P(Risk | factor, condition) > P(Risk | factor)
+                # Health Condition CPT: P(Risk | factor, condition)
+                # Uses explicit CPT values instead of arbitrary multiplication
                 if health_conditions:
-                    sensitivity_map = {
-                        "đau dạ dày": ["spicy", "ớt", "sa tế", "tương ớt", "dầu", "chất béo"],
-                        "gout": ["seafood"],
-                        "dị ứng gluten": ["gluten"],
-                        "dị ứng sữa": ["sữa"],
-                    }
                     for cond in health_conditions:
-                        sensitive_factors = sensitivity_map.get(cond, [])
-                        if factor in sensitive_factors:
-                            prior_risk = min(0.95, prior_risk * 1.5)
+                        cond_cpt = self.health_risk_cpt.get(cond, {})
+                        if factor in cond_cpt:
+                            # Use the conditional probability from CPT
+                            # P(Risk | factor, condition) ≥ P(Risk | factor)
+                            risk_prob = cond_cpt[factor]
 
-                survival_product *= (1.0 - prior_risk)
+                survival_product *= (1.0 - risk_prob)
+                detected_factor_names.add(factor)
                 found_risks.append({
                     "yếu_tố": factor,
-                    "xác_suất": round(prior_risk, 3),
+                    "xác_suất": round(risk_prob, 3),
                     "mô_tả": info["description"]
                 })
 
-        # Base risk from independent model: P(Risk) = 1 - ∏(1 - P_i)
-        base_risk = 1.0 - survival_product
+        # Base risk from Noisy-OR: P(Risk) = 1 - ∏(1 - P_i)
+        noisy_or_risk = 1.0 - survival_product
 
-        # Apply interaction multipliers for dependent risk combinations
-        for interaction in self.interaction_multipliers:
-            factors = interaction["factors"]
-            if all(f in recipe_text for f in factors):
-                base_risk = min(0.95, base_risk * interaction["multiplier"])
-                found_risks.append({
-                    "yếu_tố": " + ".join(factors),
-                    "xác_suất": interaction["multiplier"],
-                    "mô_tả": interaction["reason"]
-                })
+        # ============================================================
+        # STEP 2: Joint CPT Correction (Conditional Dependence)
+        # ============================================================
+        # Check if any factor combinations have a joint CPT entry.
+        # If so, use max(noisy_or, joint) — a mathematically valid
+        # combination that respects P ∈ [0, 1].
+        final_risk = noisy_or_risk
 
-        return base_risk, found_risks
+        for factor_set, joint_info in self.joint_risk_cpt.items():
+            if factor_set.issubset(detected_factor_names):
+                joint_prob = joint_info["joint_risk"]
+                if joint_prob > final_risk:
+                    final_risk = joint_prob
+                    found_risks.append({
+                        "yếu_tố": " + ".join(sorted(factor_set)),
+                        "xác_suất": round(joint_prob, 3),
+                        "mô_tả": f"Joint CPT: {joint_info['reason']}"
+                    })
+
+        return final_risk, found_risks
 
     # ------------------------------------------------------------------
     # Combined Evaluation (Expected Utility)
