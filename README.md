@@ -207,7 +207,7 @@ Tất cả các thư viện trên được cài đặt tự động trong notebo
 ## 7. Liên kết
 
 - Báo cáo PDF: `reports/report.pdf`
-- Colab notebook: `https://colab.research.google.com/drive/1OfIx35btL-6WLyd6XocZ9pXxWFP53a9b?usp=sharing`
+- Colab notebook: [`https://colab.research.google.com/drive/1OfIx35btL-6WLyd6XocZ9pXxWFP53a9b?usp=sharing](https://colab.research.google.com/drive/15rI6G4KB-Es5MD-mUS2iCP1GFIQ2c1Iu?usp=sharing)`
 - GitHub repository: `https://github.com/dvydinh/yumify`
 
 ---
