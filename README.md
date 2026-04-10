@@ -11,7 +11,7 @@
 
 ## 1. Giới thiệu tổng quan
 
-Dự án xây dựng một hệ thống Trí tuệ Nhân tạo tích hợp (Hybrid AI System), kết hợp AI cổ điển (Symbolic AI, Search) và Học máy (Machine Learning, Generative AI) để giải quyết bài toán gợi ý thực đơn đa ràng buộc. Hệ thống tiếp nhận yêu cầu bằng ngôn ngữ tự nhiên tiếng Anh, phân tích ngữ nghĩa, và đề xuất công thức nấu ăn thỏa mãn đồng thời các ràng buộc về chi phí, lượng calo, và điều kiện y khoa của người dùng.
+Dự án xây dựng một hệ thống Trí tuệ Nhân tạo tích hợp (Hybrid AI System), kết hợp AI cổ điển (Symbolic AI, Search, Constraint Satisfaction, Probabilistic Reasoning) và Học máy (Multinomial Naive Bayes) để giải quyết bài toán gợi ý thực đơn đa ràng buộc. Hệ thống tiếp nhận yêu cầu bằng ngôn ngữ tự nhiên tiếng Anh, phân tích ngữ nghĩa, và đề xuất công thức nấu ăn thỏa mãn đồng thời các ràng buộc về chi phí, lượng calo, và điều kiện y khoa của người dùng.
 
 Hệ thống bao phủ 6 nền ẩm thực: Việt Nam, Ý, Nhật Bản, Hàn Quốc, Mexico, và Phương Tây.
 
@@ -34,10 +34,13 @@ Hệ thống bao phủ 6 nền ẩm thực: Việt Nam, Ý, Nhật Bản, Hàn Q
 
 Hệ thống sử dụng tập dữ liệu **"Food.com Recipes and User Interactions"** từ Kaggle (được công bố bởi tác giả `shuyangli94`). Đây là tập dữ liệu quy mô lớn với hơn 230,000 công thức, được sử dụng rộng rãi trong các nghiên cứu về Recommender Systems. Hệ thống tự động fetch, parse, và trích xuất đặc trưng TF-IDF từ tập dữ liệu này khi chạy trên Colab.
 
-### 3.2. APIs bổ trợ
+- **Heuristic Quantity Estimation (Giả lập khối lượng nguyên liệu):** Dataset Kaggle Food.com chỉ cung cấp danh sách tên nguyên liệu mà **không có định lượng** (khối lượng gram). Để đảm bảo các module AI tối ưu hóa trên dữ liệu có ý nghĩa toán học (thay vì `quantity = 1` tĩnh cho mọi nguyên liệu), nhóm đã xây dựng hàm heuristic `_estimate_ingredient_quantity()` áp dụng **chuẩn USDA Standard Portion Sizes** để gán khối lượng mặc định theo loại nguyên liệu: Thịt 200g, Hải sản 150g, Rau củ 100g, Gia vị 5g, Tinh bột 150g, v.v. Quyết định thiết kế này cho phép các module A* Search và CSP Solver tối ưu hóa chi phí và calo trên dữ liệu phản ánh thực tế dinh dưỡng, thay vì chạy trên dữ liệu hoàn toàn đồng nhất.
+
+### 3.2. API bổ trợ (Extra Feature — ngoài pipeline chấm điểm chính)
 
 - **Spoonacular API:** cung cấp fallback data thời gian thực, bao gồm thông tin dinh dưỡng và giá cả nguyên liệu khi dataset cục bộ không đáp ứng truy vấn.
-- **Hugging Face Inference API (Mistral-7B và SDXL):** kích hoạt cơ chế Generative Fallback để tổng hợp công thức mới khi không gian trạng thái (State Space) của database không thỏa mãn ràng buộc người dùng.
+
+> **Lưu ý:** Pipeline AI chính (NLP → ML → CSP → A* → Bayes) hoạt động hoàn toàn offline trên dataset cục bộ và các thuật toán cổ điển. API chỉ đóng vai trò bổ sung dữ liệu, không nằm trong luồng xử lý cốt lõi.
 
 ---
 
@@ -53,13 +56,44 @@ Hệ thống được xây dựng trên 5 trụ cột AI theo yêu cầu đề b
 
 ### 4.1. Học máy (Machine Learning) — L.O.3
 
-- **NLP Parser (NER):** sử dụng kiến trúc Ontology và Regex để trích xuất thực thể có tên (Named Entity Recognition) từ văn bản tiếng Anh, nhận diện nguyên liệu, ẩm thực mục tiêu, và các ràng buộc y khoa ngầm định.
-- **TF-IDF Vectorization:** biến đổi tập công thức thành không gian vector đặc trưng, cho phép tính toán Cosine Similarity để xếp hạng mức độ phù hợp giữa truy vấn và công thức. Ma trận TF-IDF được lưu dưới dạng `data/tfidf_features.npy`.
-- **Naive Bayes Classifier:** phân loại ẩm thực (Cuisine Classification) dựa trên tập nguyên liệu đầu vào, sử dụng Multinomial Naive Bayes với Laplace smoothing. Đây là thành phần ML duy nhất có xác suất **learned from data**.
+**Pipeline tích hợp NLP → ML (Data Flow thực tế):**
+
+```
+User Input → NLP Parser (NER) → Mảng thực thể ["beef", "noodle", "chili"]
+                                         ↓
+               Multinomial Naive Bayes (đã train trước trên recipes.json)
+                                         ↓
+               P(Cuisine | features) = argmax → "Vietnamese" (0.82 confidence)
+```
+
+User Input được xử lý qua module **NER** (Named Entity Recognition) để trích xuất các thực thể nguyên liệu. Sau đó, mảng thực thể này được đẩy **trực tiếp** vào mô hình **Multinomial Naive Bayes** (`ml_classifier.py`, đã được train trước trên `recipes.json` tại thời điểm khởi tạo hệ thống) để đưa ra quyết định phân loại nền ẩm thực. Mô hình ML là **người ra quyết định duy nhất** cho bước phân loại cuisine — không sử dụng IF-ELSE hay regex matching.
+
+Các thành phần chi tiết:
+
+- **NLP Parser (NER):** Ontology-based Entity Extraction trích xuất thực thể có tên từ văn bản tiếng Anh (nguyên liệu, ràng buộc y khoa, ngân sách).
+- **TF-IDF Vectorization:** biến đổi tập công thức thành không gian vector đặc trưng, cho phép tính toán Cosine Similarity để xếp hạng mức độ phù hợp. Ma trận TF-IDF được lưu dưới dạng `data/tfidf_features.npy`.
+- **Naive Bayes Classifier:** Multinomial Naive Bayes với Laplace smoothing, **learned from data** (train trên `recipes.json`). Tính toán Posterior $P(C|W) \propto P(C) \cdot \prod P(w_i|C)$ với log-sum-exp normalization để tránh underflow.
 
 ### 4.2. Ràng buộc (CSP) — L.O.1
 
-Thuật toán thỏa mãn ràng buộc (Constraint Satisfaction Problem) với Backtracking kết hợp Forward Checking và heuristic MRV (Minimum Remaining Values) để thu hẹp không gian tìm kiếm dựa trên giới hạn calo tối đa và ngân sách cho phép.
+Thuật toán thỏa mãn ràng buộc (Constraint Satisfaction Problem) với **Backtracking**, **Forward Checking nâng cao**, và heuristic **MRV** (Minimum Remaining Values).
+
+**Kỹ thuật cốt lõi — Dual-constraint Pruning với Bounds Propagation:**
+
+Forward Checking không chỉ kiểm tra ràng buộc ngân sách mà còn thực hiện **lan truyền cận trên/dưới cho biến Calo** (Bounds Propagation). Trước khi duyệt candidate cho mỗi biến chưa gán, hệ thống tính toán trước:
+
+- $min\_future\_cals$: tổng calo **tối thiểu** từ Domain của tất cả các biến còn lại.
+- $max\_future\_cals$: tổng calo **tối đa** từ Domain của tất cả các biến còn lại.
+
+Điều kiện cắt tỉa kép (Dual-constraint Pruning):
+```
+if (current_cal + candidate_cal + min_future_cals) > max_cal:
+    prune()  # Chắc chắn vi phạm cận trên
+if (current_cal + candidate_cal + max_future_cals) < min_cal:
+    prune()  # Chắc chắn không thể đạt đủ cận dưới
+```
+
+Kỹ thuật này chặn đứng các nhánh vi phạm ràng buộc calo ngay từ giai đoạn sớm ("chặn từ trong trứng nước"), thay vì chỉ phát hiện vi phạm khi đã gán xong tất cả biến.
 
 ### 4.3. Logic và tri thức (Knowledge Base) — L.O.2.1
 
@@ -67,16 +101,42 @@ Hệ chuyên gia dựa trên luật (Rule-based Expert System) sử dụng Propo
 
 ### 4.4. Tìm kiếm (Search) — L.O.1
 
-Thuật toán A* (A-Star Search) với Admissible Heuristic để tìm lộ trình tối ưu cho bài toán giỏ hàng mua sắm. Không gian trạng thái được mô hình hóa với:
+Thuật toán **A* (A-Star Search)** với **Admissible Heuristic** cho bài toán N-Days Meal Planning. Không gian trạng thái:
 
-- **State:** tập nguyên liệu đã chọn và tổng chi phí hiện tại.
-- **Action:** thêm một nguyên liệu vào giỏ hàng.
-- **Goal:** giỏ hàng đủ nguyên liệu cho công thức được chọn.
-- **Cost:** tổng chi phí bằng VNĐ.
+- **State:** `(day, total_cost, total_calories, sorted_multiset_of_recipes)`
+- **Action:** chọn một công thức cho ngày tiếp theo.
+- **Goal:** đủ N ngày, tổng chi phí ≤ budget, calo trong khoảng cho phép.
+- **Cost:** tổng chi phí tích lũy $g(n)$; heuristic $h(n) = (N - day) \times min\_cost$ (Admissible vì không bao giờ đánh giá quá thực tế).
+
+**Kỹ thuật cốt lõi — Canonical State Representation (Chuẩn hóa không gian trạng thái):**
+
+Vì Goal Test chỉ kiểm tra **tổng chi phí** và **tổng calo** (không quan tâm thứ tự gán công thức cho ngày), các hoán vị (permutations) của cùng một tập công thức là **trạng thái tương đương**. Ví dụ: State(Phở, Pizza) ≡ State(Pizza, Phở).
+
+Hệ thống áp dụng **Canonical Form** bằng cách sắp xếp `selected_recipes` trước khi nạp vào tập `visited`. Kỹ thuật này gộp các trạng thái hoán vị thành một, giảm kích thước cây tìm kiếm:
+
+$$O(R^N) \rightarrow O\left(\frac{R^N}{N!}\right) = O(C(R,N))$$
+
+Chuyển từ **Hoán vị** sang **Tổ hợp**, cho phép A* chạy thực tế với $N = 7$ ngày trở lên.
 
 ### 4.5. Xác suất (Bayesian Network) — L.O.2.2
 
-Expert-driven Bayesian Network sử dụng Subjectivist Probabilities (xác suất gán bởi chuyên gia dinh dưỡng, không phải learned from data). Tính toán Posterior Preference P(Like|Evidence) qua Bayes' Rule trong log-space, đánh giá rủi ro tiêu hóa qua Independent Risk Model (Noisy-OR), và kết hợp thành Expected Utility Theory để ra quyết định trong môi trường bất định.
+Expert-driven Bayesian Network sử dụng Subjectivist Probabilities (xác suất gán bởi chuyên gia dinh dưỡng theo phương pháp Expert Elicitation — de Finetti). Mô hình gồm hai tầng inference:
+
+1. **Posterior Preference Inference:** $P(Like | e_1, e_2, \ldots, e_n)$ tính qua Bayes' Rule trong log-space với log-sum-exp normalization.
+
+2. **Extended Noisy-OR Model with Synergy Hidden Causes** (Mô hình Noisy-OR mở rộng với các nguyên nhân ẩn hiệp đồng):
+
+   Mô hình cơ bản Noisy-OR giả định các yếu tố rủi ro là **độc lập**: $P(Risk) = 1 - \prod(1 - P_i)$. Tuy nhiên, trong thực tế dinh dưỡng, một số yếu tố có **tác động hiệp đồng** (synergy) khi xuất hiện đồng thời (ví dụ: Cay + Dầu mỡ gây kích ứng mạnh hơn tổng riêng lẻ).
+
+   Thay vì nhân xác suất với hằng số (vi phạm tiên đề Kolmogorov), hệ thống mô hình hóa sự hiệp đồng như một **nguyên nhân ẩn (hidden cause)** bổ sung trong Noisy-OR:
+
+   $$P(Risk) = 1 - \prod_{i}(1 - P_i) \times \prod_{j}(1 - P_{synergy_j})$$
+
+   Trong đó $P_{synergy_j}$ là xác suất rủi ro độc lập của sự kiện hiệp đồng thứ $j$ (ví dụ: $P_{synergy}(Spicy \cap Oil) = 0.40$). Kết quả $P(Risk)$ luôn hội tụ trong $[0, 1]$ **một cách tự nhiên** theo lý thuyết xác suất, không cần hàm `min(0.95, ...)` để ép kiểu.
+
+   *Tham khảo: Henrion (1989), "Some Practical Issues in Constructing Belief Networks", UAI'89.*
+
+3. **Expected Utility Theory:** kết hợp Posterior Preference và Risk Assessment thành Expected Utility để ra quyết định tối ưu trong môi trường bất định.
 
 ---
 
@@ -90,7 +150,7 @@ NMAI/
 │   ├── csp_solver.py         # CSP Solver (Backtracking + MRV)
 │   ├── knowledge_base.py     # Forward Chaining Engine (Propositional Logic)
 │   ├── bayes_risk.py         # Expert-driven Bayesian Network + Expected Utility
-│   └── ml_classifier.py      # Naive Bayes Cuisine Classifier (ML)
+│   └── ml_classifier.py      # Multinomial Naive Bayes Cuisine Classifier (ML, tích hợp trực tiếp vào nlp_parser)
 ├── features/             # Trích xuất đặc trưng và kết nối dữ liệu
 │   ├── api_client.py         # Kết nối Spoonacular, HuggingFace
 │   ├── data_loader.py        # Tải và parse dữ liệu JSON/CSV
@@ -147,8 +207,8 @@ Tất cả các thư viện trên được cài đặt tự động trong notebo
 
 ## 8. Tài liệu tham khảo
 
-1. S. Russell, P. Norvig, *Artificial Intelligence: A Modern Approach*, 4th Edition, Pearson, 2020.
+1. S. Russell, P. Norvig, *Artificial Intelligence: A Modern Approach*, 4th Edition, Pearson, 2020. — Chương 3–4 (Search), Chương 6 (CSP), Chương 7 (Logic), Chương 13–16 (Probability & Bayes), Chương 20 (Naive Bayes).
 2. P.E. Hart, N.J. Nilsson, B. Raphael, "A Formal Basis for the Heuristic Determination of Minimum Cost Paths", *IEEE Transactions on Systems Science and Cybernetics*, 1968.
-3. G. Salton, C. Buckley, "Term-weighting approaches in automatic text retrieval", *Information Processing & Management*, 1988.
-4. Spoonacular API Documentation: https://spoonacular.com/food-api/docs
-5. Hugging Face Inference API: https://huggingface.co/docs/api-inference
+3. M. Henrion, "Some Practical Issues in Constructing Belief Networks", *Proceedings of the 3rd Conference on Uncertainty in AI (UAI)*, 1989. — Noisy-OR extensions and hidden causes.
+4. G. Salton, C. Buckley, "Term-weighting approaches in automatic text retrieval", *Information Processing & Management*, 1988.
+5. Spoonacular API Documentation: https://spoonacular.com/food-api/docs
