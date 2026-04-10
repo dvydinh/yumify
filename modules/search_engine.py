@@ -9,12 +9,22 @@ AI Pillar: Search & Optimization (L.O.2.1)
 Solves the N-Days Meal Planning Problem using A* Search:
 
 Problem Formulation:
-    STATE:   (current_day, total_cost, total_calories, tuple_of_selected_recipes)
+    STATE:   (current_day, total_cost, total_calories, sorted_multiset_of_recipes)
     ACTION:  Select recipe X for day (current_day + 1)
     GOAL:    current_day == N  AND  total_cost <= Budget  AND
              total_calories within [min_cal * N, max_cal * N]
     g(n):    Total price of recipes chosen so far (path cost).
     h(n):    (N - current_day) * min_recipe_cost_in_DB  (Admissible Heuristic).
+
+State Equivalence (CRITICAL FIX):
+    Since the Goal Test only checks TOTAL cost and TOTAL calories
+    (not which recipe is assigned to which day), permutations of
+    the same recipe set are EQUIVALENT states.
+    E.g., (Phở, Pizza) ≡ (Pizza, Phở) for our goal function.
+
+    We enforce a CANONICAL FORM by sorting selected_recipes before
+    inserting into the visited set. This collapses permutations:
+        Search space: O(R^N) → O(R^N / N!)  (Combinations, not Permutations)
 
 Admissibility Proof:
     h(n) = remaining_days * cheapest_recipe_cost
@@ -224,7 +234,10 @@ class AStarMealPlanner:
         )
 
         open_set: List[MealPlanState] = [start]
-        # Visited: track (day, selected_tuple) to avoid re-expansion
+        # Visited: track (day, SORTED_selected_tuple) to avoid re-expansion
+        # Sorting collapses permutations into one canonical state:
+        #   (Phở, Pizza) and (Pizza, Phở) → both map to (Pizza, Phở)
+        #   This reduces search space from O(R^N) to O(C(R,N)) = O(R^N / N!)
         visited: Set[Tuple[int, Tuple[int, ...]]] = set()
         nodes_explored = 0
 
@@ -235,7 +248,9 @@ class AStarMealPlanner:
             current = heapq.heappop(open_set)
             nodes_explored += 1
 
-            state_key = (current.current_day, current.selected_recipes)
+            # CANONICAL FORM: sort recipes to collapse permutations
+            canonical_recipes = tuple(sorted(current.selected_recipes))
+            state_key = (current.current_day, canonical_recipes)
             if state_key in visited:
                 continue
             visited.add(state_key)
@@ -313,8 +328,8 @@ class AStarMealPlanner:
                     selected_recipes=new_selected
                 )
 
-                # Only add if not visited
-                succ_key = (new_day, new_selected)
+                # Only add if not visited (using canonical sorted form)
+                succ_key = (new_day, tuple(sorted(new_selected)))
                 if succ_key not in visited:
                     heapq.heappush(open_set, successor)
 
