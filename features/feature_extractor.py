@@ -312,8 +312,10 @@ def _parse_kaggle_csv(csv_path: str, max_recipes: int = 5000) -> List[Dict[str, 
                     nutr_vals = [float(x.strip()) for x in nutr_str.strip('[]').split(',')]
                     calories = nutr_vals[0] if nutr_vals else 0
 
-                    # Detect cuisine from tags
-                    cuisine = _detect_cuisine_from_tags(tags)
+                    # Detect cuisine from tags, name, and ingredients
+                    recipe_name = row.get('name', '')
+                    ing_names = [i['name'] for i in ingredients]
+                    cuisine = _detect_cuisine_from_tags(tags, recipe_name, ing_names)
 
                     # ==========================================================
                     # COST COMPUTATION — Cross-reference with ingredients.json
@@ -383,21 +385,127 @@ def _parse_kaggle_csv(csv_path: str, max_recipes: int = 5000) -> List[Dict[str, 
     return recipes
 
 
-def _detect_cuisine_from_tags(tags: List[str]) -> str:
-    """Nhận diện cuisine từ tags dataset."""
-    tags_lower = [t.lower() for t in tags]
-    cuisine_map = {
-        "italian": "Ý", "japanese": "Nhật Bản", "korean": "Hàn Quốc",
-        "mexican": "Mexico", "vietnamese": "Việt Nam", "thai": "Thái Lan",
-        "chinese": "Trung Quốc", "indian": "Ấn Độ", "french": "Pháp",
-        "european": "Phương Tây", "american": "Phương Tây",
-        "mediterranean": "Phương Tây", "greek": "Phương Tây",
+def _detect_cuisine_from_tags(
+    tags: List[str],
+    recipe_name: str = "",
+    ingredients: Optional[List[str]] = None
+) -> str:
+    """
+    Detect cuisine from tags, recipe name, AND ingredients.
+
+    Food.com tags rarely contain explicit cuisine labels (e.g. 'italian'),
+    so relying on tags alone causes 99%+ of recipes to fall into 'Quốc tế',
+    creating fatal class imbalance for ML training.
+
+    Detection priority:
+      1. Tag-based: explicit cuisine tags
+      2. Name-based: recipe name patterns (e.g. 'pad thai' → Thai)
+      3. Ingredient-based: signature ingredients (e.g. 'soy sauce' → Japanese)
+    """
+    # Combine all text for matching
+    tags_lower = [t.lower().strip() for t in tags]
+    name_lower = recipe_name.lower().strip()
+    ing_text = " ".join(i.lower().strip() for i in (ingredients or []))
+
+    # ── Tag-based detection (highest confidence) ──
+    tag_cuisine_map = {
+        "italian": "Italian", "japanese": "Japanese", "korean": "Korean",
+        "mexican": "Mexican", "vietnamese": "Vietnamese", "thai": "Thai",
+        "chinese": "Chinese", "indian": "Indian", "french": "French",
+        "greek": "Greek", "spanish": "Spanish", "moroccan": "Moroccan",
+        "turkish": "Turkish", "lebanese": "Lebanese", "ethiopian": "Ethiopian",
+        "brazilian": "Brazilian", "peruvian": "Peruvian", "cajun": "Cajun",
+        "caribbean": "Caribbean", "filipino": "Filipino",
+        "european": "Western", "american": "Western",
+        "mediterranean": "Mediterranean", "middle-eastern": "Middle Eastern",
+        "south-east-asian": "Southeast Asian", "asian": "Asian",
+        "african": "African", "latin-american": "Latin American",
     }
     for tag in tags_lower:
-        for key, value in cuisine_map.items():
+        for key, value in tag_cuisine_map.items():
             if key in tag:
                 return value
-    return "Quốc tế"
+
+    # ── Name-based detection ──
+    name_patterns = {
+        "Italian": ["pasta", "spaghetti", "lasagne", "lasagna", "risotto",
+                     "bruschetta", "ravioli", "gnocchi", "penne", "fettuccine",
+                     "carbonara", "bolognese", "marinara", "parmigiana",
+                     "focaccia", "ciabatta", "prosciutto", "tiramisu",
+                     "pizza", "calzone", "antipasto", "minestrone"],
+        "Japanese": ["sushi", "ramen", "teriyaki", "tempura", "udon",
+                      "miso", "sashimi", "yakitori", "tonkatsu", "gyoza",
+                      "edamame", "dashi", "matcha", "onigiri", "takoyaki"],
+        "Mexican": ["taco", "burrito", "enchilada", "quesadilla", "tamale",
+                     "guacamole", "salsa", "fajita", "churro", "pozole",
+                     "carnitas", "chimichanga", "nachos", "mole"],
+        "Chinese": ["stir fry", "stir-fry", "kung pao", "fried rice",
+                     "lo mein", "chow mein", "dim sum", "wonton", "dumpling",
+                     "szechuan", "sichuan", "cantonese", "mapo tofu",
+                     "sweet and sour", "peking", "hoisin", "char siu"],
+        "Thai": ["pad thai", "thai curry", "green curry", "red curry",
+                  "tom yum", "tom kha", "massaman", "panang", "thai basil",
+                  "pad see ew", "larb", "satay"],
+        "Indian": ["curry", "tandoori", "tikka", "masala", "biryani",
+                    "naan", "dal", "dhal", "paneer", "vindaloo", "korma",
+                    "samosa", "chutney", "chapati", "roti", "dosa"],
+        "Korean": ["kimchi", "bibimbap", "bulgogi", "japchae", "gochujang",
+                    "tteokbokki", "samgyeopsal", "galbi", "jjigae",
+                    "kimbap", "sundubu"],
+        "Vietnamese": ["pho", "banh mi", "bun bo", "spring roll", "goi cuon",
+                        "bun cha", "com tam", "cao lau"],
+        "French": ["croissant", "ratatouille", "cassoulet", "bouillabaisse",
+                    "quiche", "souffle", "crepe", "gratin", "bechamel",
+                    "coq au vin", "confit", "bourguignon", "provencal"],
+        "Mediterranean": ["hummus", "falafel", "pita", "tahini",
+                           "tabbouleh", "shawarma", "kebab", "tzatziki"],
+        "Cajun": ["cajun", "creole", "gumbo", "jambalaya", "etouffee"],
+        "Western": ["burger", "steak", "roast", "pot roast", "meatloaf",
+                     "barbecue", "bbq", "grilled cheese", "mac and cheese",
+                     "casserole", "pot pie", "chili con"],
+    }
+    for cuisine, patterns in name_patterns.items():
+        for p in patterns:
+            if p in name_lower:
+                return cuisine
+
+    # ── Ingredient-based detection (lowest confidence) ──
+    ing_patterns = {
+        "Italian": ["mozzarella", "parmesan", "parmigiano", "ricotta",
+                     "prosciutto", "pancetta", "basil", "oregano",
+                     "marinara", "pesto"],
+        "Japanese": ["soy sauce", "mirin", "sake", "wasabi", "nori",
+                      "tofu", "dashi", "miso paste", "sesame oil",
+                      "rice vinegar", "bonito"],
+        "Mexican": ["tortilla", "jalapeno", "cilantro", "avocado",
+                     "chipotle", "cumin", "black beans", "cotija",
+                     "tomatillo", "ancho"],
+        "Chinese": ["oyster sauce", "hoisin", "five spice",
+                     "star anise", "bok choy", "bamboo shoots",
+                     "water chestnuts", "wok"],
+        "Thai": ["lemongrass", "galangal", "kaffir lime", "fish sauce",
+                  "coconut milk", "thai chili", "thai basil",
+                  "palm sugar", "shrimp paste"],
+        "Indian": ["turmeric", "garam masala", "cardamom", "coriander",
+                    "cumin seeds", "ghee", "fenugreek", "chana",
+                    "basmati", "tamarind"],
+        "Korean": ["gochujang", "kimchi", "sesame", "doenjang",
+                    "gochugaru", "perilla"],
+        "Vietnamese": ["fish sauce", "rice noodle", "bean sprouts",
+                        "nuoc mam", "star anise", "lemongrass"],
+    }
+    for cuisine, patterns in ing_patterns.items():
+        match_count = sum(1 for p in patterns if p in ing_text)
+        if match_count >= 2:
+            return cuisine
+
+    # Single strong ingredient match
+    for cuisine, patterns in ing_patterns.items():
+        for p in patterns:
+            if p in ing_text and len(p) > 5:  # only strong signals
+                return cuisine
+
+    return "International"
 
 
 def download_recipe_dataset(
