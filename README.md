@@ -1,15 +1,10 @@
 # Hệ thống AI gợi ý ẩm thực và tối ưu hóa ngân sách
 
 **Bài tập lớn môn học:** Nhập môn Trí tuệ Nhân tạo (Introduction to AI)
-
 **Mã môn học:** CO3061
-
 **Học kỳ:** II — Năm học 2025–2026
-
 **Trường:** Đại học Bách Khoa, ĐHQG-HCM
-
 **Giảng viên hướng dẫn:** TS. Trương Vĩnh Lân
-
 **GitHub repository:** [https://github.com/dvydinh/yumify](https://github.com/dvydinh/yumify)
 
 ---
@@ -27,9 +22,9 @@ Hệ thống bao phủ 6 nền ẩm thực: Việt Nam, Ý, Nhật Bản, Hàn Q
 | Họ và tên | MSSV | Email |
 |-----------|------|-------|
 | Đinh Đoàn Vy | 2353350 | vy.dinhdoan2005@hcmut.edu.vn |
-| Trần Thiên Lộc | 2352715 |  |
-| Nguyễn Trần Gia Bảo | 2352103 |  |
-| Dương Lê Nhật Duy | 2352171 |  |
+| Trần Thiên Lộc | 2352715 | loc.tranthien3905@hcmut.edu.vn |
+| Nguyễn Trần Gia Bảo | 2352103 | bao.nguyentrangia@hcmut.edu.vn |
+| Dương Lê Nhật Duy | 2352171 | duy.duong250405@hcmut.edu.vn |
 
 ---
 
