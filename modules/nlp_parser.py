@@ -286,34 +286,70 @@ class EnglishNLPParser:
 
     def _train_ml_classifier(self) -> None:
         """
-        Train the Naive Bayes classifier on recipes.json.
+        Train the Naive Bayes classifier on the FULL dataset.
 
-        This method loads the recipe dataset and trains the ML model,
-        establishing the complete Data → ML → Decision pipeline.
+        Training priority:
+          1. Kaggle Food.com dataset (thousands of recipes) — PRIMARY
+          2. recipes.json (25 recipes) — FALLBACK only
+
+        CRITICAL: Previously trained on recipes.json (25 samples) which
+        is mock-level data. Now uses download_recipe_dataset() to get
+        the real Kaggle data with proper cuisine labels.
         """
-        # Locate recipes.json relative to this module
         base_dir = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), '..', 'data'
         )
-        recipes_path = os.path.join(base_dir, 'recipes.json')
 
-        if not os.path.exists(recipes_path):
-            print(f"  [NLP] Warning: recipes.json not found at {recipes_path}")
-            print(f"  [NLP] ML classifier will not be available; using keyword fallback.")
+        training_data = []
+        source = ""
+
+        # ============================================================
+        # TIER 1: Kaggle cached dataset (thousands of recipes)
+        # ============================================================
+        kaggle_cache = os.path.join(base_dir, 'recipes_kaggle.json')
+        if os.path.exists(kaggle_cache):
+            try:
+                with open(kaggle_cache, 'r', encoding='utf-8') as f:
+                    training_data = json.load(f)
+                source = f"Kaggle cache ({len(training_data)} recipes)"
+            except Exception:
+                pass
+
+        # Tier 1b: Try download_recipe_dataset if no cache
+        if not training_data:
+            try:
+                from features.feature_extractor import download_recipe_dataset
+                training_data = download_recipe_dataset(base_dir)
+                if training_data and len(training_data) > 50:
+                    source = f"download_recipe_dataset ({len(training_data)} recipes)"
+            except Exception:
+                pass
+
+        # ============================================================
+        # TIER 2: recipes.json fallback (25 recipes)
+        # ============================================================
+        if not training_data:
+            recipes_path = os.path.join(base_dir, 'recipes.json')
+            if os.path.exists(recipes_path):
+                try:
+                    with open(recipes_path, 'r', encoding='utf-8') as f:
+                        training_data = json.load(f)
+                    source = f"recipes.json fallback ({len(training_data)} recipes)"
+                except Exception:
+                    pass
+
+        if not training_data:
+            print(f"  [NLP] Warning: No training data found.")
             return
 
         try:
-            with open(recipes_path, 'r', encoding='utf-8') as f:
-                recipes = json.load(f)
-
-            self.ml_classifier.train(recipes)
+            self.ml_classifier.train(training_data)
             n_classes = len(self.ml_classifier.class_counts)
             n_vocab = len(self.ml_classifier.vocab)
-            print(f"  [NLP] ML Classifier trained: {len(recipes)} recipes, "
+            print(f"  [NLP] ML Classifier trained: {source}, "
                   f"{n_classes} cuisines, {n_vocab} vocabulary terms")
         except Exception as e:
             print(f"  [NLP] ML Classifier training failed: {e}")
-            print(f"  [NLP] Falling back to keyword matching.")
 
     def _load_ontology(self, path: str):
         with open(path, 'r', encoding='utf-8') as f:
