@@ -241,7 +241,44 @@ def _parse_kaggle_csv(csv_path: str, max_recipes: int = 5000) -> List[Dict[str, 
     Cột CSV (RAW_recipes.csv):
         name, id, minutes, contributor_id, submitted, tags, nutrition, n_steps,
         steps, description, ingredients, n_ingredients
+
+    CRITICAL: Kaggle CSV does NOT contain price/cost data.
+    We cross-reference each ingredient name against ingredients.json
+    to compute a realistic USD cost per recipe. Without this, A* Search
+    degenerates into blind search (cost=0 → h(n)=0, g(n)=0).
     """
+    # ================================================================
+    # PRE-LOAD ingredients.json for cost lookup
+    # ================================================================
+    ingredients_db = {}
+    try:
+        ing_json_path = os.path.join(
+            os.path.dirname(csv_path), 'ingredients.json'
+        )
+        if not os.path.exists(ing_json_path):
+            # Fallback: look relative to this module
+            ing_json_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                '..', 'data', 'ingredients.json'
+            )
+        if os.path.exists(ing_json_path):
+            with open(ing_json_path, 'r', encoding='utf-8') as f:
+                ing_list = json.load(f)
+            for ing in ing_list:
+                name_lower = ing.get('name', '').lower().strip()
+                if name_lower:
+                    price = ing.get('price_usd', 0)
+                    if not price and ing.get('price_vnd'):
+                        price = ing['price_vnd'] / 25000  # VND → USD approx
+                    ingredients_db[name_lower] = {
+                        'price_usd': price,
+                        'calories': ing.get('calories', 0),
+                        'category': ing.get('category', ''),
+                    }
+            print(f"  [Cost] Loaded {len(ingredients_db)} ingredients for price lookup")
+    except Exception as e:
+        print(f"  [Cost] Warning: Could not load ingredients.json: {e}")
+
     recipes = []
     try:
         with open(csv_path, 'r', encoding='utf-8', errors='replace') as f:
@@ -255,9 +292,6 @@ def _parse_kaggle_csv(csv_path: str, max_recipes: int = 5000) -> List[Dict[str, 
                     tags = [t.strip("' ") for t in tags_str.strip('[]').split(',')][:5]
 
                     # Parse ingredients — with HEURISTIC QUANTITY ESTIMATION
-                    # Instead of hardcoded quantity=1 (which makes all AI
-                    # calorie/cost calculations meaningless), we estimate
-                    # realistic quantities based on ingredient category.
                     ing_str = row.get('ingredients', '[]')
                     ing_list = [i.strip("' ") for i in ing_str.strip('[]').split(',')]
                     ingredients = [
@@ -281,6 +315,50 @@ def _parse_kaggle_csv(csv_path: str, max_recipes: int = 5000) -> List[Dict[str, 
                     # Detect cuisine from tags
                     cuisine = _detect_cuisine_from_tags(tags)
 
+                    # ==========================================================
+                    # COST COMPUTATION — Cross-reference with ingredients.json
+                    # ==========================================================
+                    # Without this, recipe.get("cost", 0) returns 0 for ALL
+                    # Kaggle recipes, causing A* heuristic h(n) = 0 and
+                    # degenerating into blind search.
+                    #
+                    # Strategy: For each ingredient, find best match in DB
+                    # and sum up prices. If no match found, use category-based
+                    # default pricing.
+                    total_cost = 0.0
+                    for ing in ingredients:
+                        ing_name = ing['name'].lower().strip()
+                        matched_price = None
+
+                        # Exact match
+                        if ing_name in ingredients_db:
+                            matched_price = ingredients_db[ing_name]['price_usd']
+                        else:
+                            # Substring match: "chicken breast" matches "chicken"
+                            for db_name, db_info in ingredients_db.items():
+                                if db_name in ing_name or ing_name in db_name:
+                                    matched_price = db_info['price_usd']
+                                    break
+
+                        if matched_price is not None and matched_price > 0:
+                            total_cost += matched_price
+                        else:
+                            # Default pricing by category (USDA-based estimates)
+                            qty = ing.get('quantity', 80)
+                            if qty >= 200:      # Meat
+                                total_cost += 1.50
+                            elif qty >= 150:    # Seafood/Grain
+                                total_cost += 1.00
+                            elif qty >= 100:    # Produce
+                                total_cost += 0.30
+                            elif qty >= 50:     # Dairy
+                                total_cost += 0.50
+                            else:               # Spice/Sauce
+                                total_cost += 0.10
+
+                    # Ensure minimum cost (no recipe is truly free)
+                    total_cost = max(total_cost, 0.50)
+
                     recipes.append({
                         "id": int(row.get('id', i)),
                         "name": row.get('name', f'Recipe {i}'),
@@ -289,15 +367,20 @@ def _parse_kaggle_csv(csv_path: str, max_recipes: int = 5000) -> List[Dict[str, 
                         "ingredients": ingredients,
                         "steps": steps,
                         "calories": calories,
+                        "cost": round(total_cost, 2),  # CRITICAL: A* needs this!
                         "servings": 4,
                         "source": "kaggle_foodcom"
                     })
                 except Exception:
                     continue
 
-        print(f" Parsed {len(recipes)} recipes từ Kaggle CSV")
+        print(f"  Parsed {len(recipes)} recipes từ Kaggle CSV")
+        if recipes:
+            costs = [r['cost'] for r in recipes]
+            print(f"  [Cost] Range: ${min(costs):.2f} — ${max(costs):.2f}, "
+                  f"Mean: ${sum(costs)/len(costs):.2f}")
     except Exception as e:
-        print(f" Lỗi parse CSV: {e}")
+        print(f"  Lỗi parse CSV: {e}")
 
     return recipes
 
