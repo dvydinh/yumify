@@ -298,7 +298,18 @@ class AStarMealPlanner:
                 recipe_cost = recipe.get("cost", 0)
                 recipe_cal = recipe.get("calories", 0)
 
-                new_g = current.g_score + recipe_cost
+                # Repetition penalty: discourage same recipe on multiple days
+                # Count how many times this recipe already appears in the plan
+                repeat_count = current.selected_recipes.count(recipe_idx)
+                repetition_penalty = 0.0
+                if repeat_count > 0:
+                    # Base penalty: doubles each time (exponential discouragement)
+                    repetition_penalty = recipe_cost * (2 ** repeat_count)
+                    # Extra penalty if this recipe was used on the PREVIOUS day
+                    if current.selected_recipes and current.selected_recipes[-1] == recipe_idx:
+                        repetition_penalty += recipe_cost * 3.0
+
+                new_g = current.g_score + recipe_cost + repetition_penalty
                 new_cal = current.total_calories + recipe_cal
                 new_day = current.current_day + 1
 
