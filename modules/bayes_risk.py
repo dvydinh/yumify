@@ -134,18 +134,31 @@ PRIOR_NOT_LIKE = 0.4
 # P(Risk | Ingredient/Tag) — Conditional risk probabilities
 # Mỗi entry biểu diễn một Chance Node trong Bayesian Network cho rủi ro
 DIGESTIVE_RISK_CPT: Dict[str, Dict[str, Any]] = {
-    "spicy":          {"prior_risk": 0.35, "description": "Capsaicin kích thích niêm mạc dạ dày"},
-    "ớt":           {"prior_risk": 0.40, "description": "Capsaicin nồng độ cao gây kích ứng"},
-    "sa tế":        {"prior_risk": 0.45, "description": "Hỗn hợp dầu và ớt khó tiêu hóa"},
-    "tương ớt":     {"prior_risk": 0.30, "description": "Tương ớt có tính cay vừa phải"},
-    "seafood":      {"prior_risk": 0.25, "description": "Nguy cơ dị ứng protein biển"},
-    "dầu":          {"prior_risk": 0.20, "description": "Chất béo làm chậm nhu động ruột"},
-    "chất béo":     {"prior_risk": 0.20, "description": "Chất béo cao gây đầy trướng"},
-    "nước cốt dừa": {"prior_risk": 0.25, "description": "Chất béo bão hòa từ dừa"},
-    "gluten":       {"prior_risk": 0.20, "description": "Gluten gây khó tiêu cho người nhạy cảm"},
-    "sữa":          {"prior_risk": 0.18, "description": "Lactose gây đầy bụng nếu bất dung nạp"},
-    "gochujang":    {"prior_risk": 0.35, "description": "Tương ớt Hàn có tính cay mạnh"},
-    "wasabi":       {"prior_risk": 0.30, "description": "Isothiocyanate gây kích ứng niêm mạc"},
+    # English keys to match Kaggle dataset ingredient names
+    "spicy":          {"prior_risk": 0.35, "description": "Capsaicin irritates gastric mucosa"},
+    "chili":          {"prior_risk": 0.40, "description": "High-concentration capsaicin irritant"},
+    "hot pepper":     {"prior_risk": 0.40, "description": "Capsaicin causes mucosal inflammation"},
+    "chili paste":    {"prior_risk": 0.45, "description": "Oil-chili mix difficult to digest"},
+    "hot sauce":      {"prior_risk": 0.30, "description": "Moderate capsaicin in sauce form"},
+    "sriracha":       {"prior_risk": 0.30, "description": "Fermented chili sauce with garlic"},
+    "cayenne":        {"prior_risk": 0.38, "description": "Concentrated capsaicin powder"},
+    "jalapeno":       {"prior_risk": 0.32, "description": "Moderate capsaicin content"},
+    "seafood":        {"prior_risk": 0.25, "description": "Risk of marine protein allergy"},
+    "shrimp":         {"prior_risk": 0.28, "description": "Common shellfish allergen"},
+    "oil":            {"prior_risk": 0.20, "description": "Fat slows gut motility"},
+    "butter":         {"prior_risk": 0.18, "description": "Saturated fat causes bloating"},
+    "cream":          {"prior_risk": 0.20, "description": "High fat dairy difficult to digest"},
+    "fat":            {"prior_risk": 0.20, "description": "Heavy fat content causes bloating"},
+    "coconut milk":   {"prior_risk": 0.25, "description": "Saturated fat from coconut"},
+    "coconut cream":  {"prior_risk": 0.25, "description": "High saturated fat content"},
+    "gluten":         {"prior_risk": 0.20, "description": "Gluten intolerance trigger"},
+    "wheat":          {"prior_risk": 0.18, "description": "Contains gluten proteins"},
+    "milk":           {"prior_risk": 0.18, "description": "Lactose intolerance trigger"},
+    "cheese":         {"prior_risk": 0.15, "description": "Lactose and casein content"},
+    "gochujang":      {"prior_risk": 0.35, "description": "Korean chili paste, highly spicy"},
+    "wasabi":         {"prior_risk": 0.30, "description": "Isothiocyanate mucosal irritant"},
+    "curry":          {"prior_risk": 0.25, "description": "Spice blend can irritate stomach"},
+    "pepper":         {"prior_risk": 0.15, "description": "Piperine mild gastric irritant"},
 }
 
 # ============================================================================
@@ -164,39 +177,44 @@ DIGESTIVE_RISK_CPT: Dict[str, Dict[str, Any]] = {
 #            Belief Networks", UAI'89.
 SYNERGY_RISK_CPT: List[Dict[str, Any]] = [
     {
-        "factors": {"spicy", "dầu"},
+        "factors": {"spicy", "oil"},
         "synergy_risk": 0.40,
-        "reason": "Cay + dầu gây kích ứng kép trên niêm mạc dạ dày"
+        "reason": "Capsaicin + oil causes dual mucosal irritation"
     },
     {
-        "factors": {"ớt", "dầu"},
+        "factors": {"chili", "oil"},
         "synergy_risk": 0.45,
-        "reason": "Capsaicin + dầu mỡ tăng nguy cơ trào ngược"
+        "reason": "Chili + oil increases reflux risk"
     },
     {
-        "factors": {"sa tế", "dầu"},
+        "factors": {"chili paste", "oil"},
         "synergy_risk": 0.50,
-        "reason": "Sa tế chứa cả ớt lẫn dầu, gây kích ứng mạnh"
+        "reason": "Chili paste contains both capsaicin and fat"
     },
     {
         "factors": {"seafood", "spicy"},
         "synergy_risk": 0.35,
-        "reason": "Hải sản cay tăng nguy cơ phản ứng dị ứng"
+        "reason": "Spicy seafood heightens allergic response risk"
     },
     {
-        "factors": {"seafood", "ớt"},
+        "factors": {"seafood", "chili"},
         "synergy_risk": 0.38,
-        "reason": "Hải sản + capsaicin tăng kích ứng tiêu hóa"
+        "reason": "Seafood + capsaicin compounds digestive irritation"
     },
     {
-        "factors": {"sữa", "spicy"},
+        "factors": {"milk", "spicy"},
         "synergy_risk": 0.30,
-        "reason": "Casein + capsaicin khó phân giải trong dạ dày"
+        "reason": "Casein + capsaicin hard to break down in stomach"
     },
     {
-        "factors": {"sữa", "ớt"},
+        "factors": {"cream", "chili"},
         "synergy_risk": 0.32,
-        "reason": "Lactose + capsaicin gây co thắt ruột"
+        "reason": "Dairy fat + capsaicin causes intestinal cramping"
+    },
+    {
+        "factors": {"butter", "spicy"},
+        "synergy_risk": 0.30,
+        "reason": "Saturated fat + spice amplifies gastric distress"
     },
 ]
 
@@ -207,23 +225,33 @@ SYNERGY_RISK_CPT: List[Dict[str, Any]] = [
 # probability axioms), we define explicit conditional probabilities.
 # P(Risk | factor, condition) is directly specified by domain experts.
 HEALTH_CONDITIONAL_RISK_CPT: Dict[str, Dict[str, float]] = {
-    # P(Risk | factor, đau dạ dày)
+    # P(Risk | factor, stomachache / gastritis)
+    "stomachache": {
+        "spicy": 0.70, "chili": 0.75, "chili paste": 0.80,
+        "hot sauce": 0.55, "cayenne": 0.72, "jalapeno": 0.60,
+        "oil": 0.45, "fat": 0.45, "butter": 0.40,
+        "gochujang": 0.65, "wasabi": 0.60, "curry": 0.50,
+    },
     "đau dạ dày": {
-        "spicy": 0.70,  "ớt": 0.75,  "sa tế": 0.80,
-        "tương ớt": 0.55, "dầu": 0.45, "chất béo": 0.45,
+        "spicy": 0.70, "chili": 0.75, "chili paste": 0.80,
+        "oil": 0.45, "fat": 0.45,
         "gochujang": 0.65, "wasabi": 0.60,
     },
     # P(Risk | factor, gout)
     "gout": {
-        "seafood": 0.70,
+        "seafood": 0.70, "shrimp": 0.72,
     },
-    # P(Risk | factor, dị ứng gluten)
-    "dị ứng gluten": {
-        "gluten": 0.85,
+    # P(Risk | factor, gluten intolerance)
+    "gluten intolerance": {
+        "gluten": 0.85, "wheat": 0.80,
     },
-    # P(Risk | factor, dị ứng sữa)
-    "dị ứng sữa": {
-        "sữa": 0.80,
+    # P(Risk | factor, lactose intolerance)
+    "lactose intolerance": {
+        "milk": 0.80, "cheese": 0.70, "cream": 0.75,
+    },
+    # P(Risk | factor, diabetes)
+    "diabetes": {
+        "sugar": 0.60, "honey": 0.50,
     },
 }
 
