@@ -2,17 +2,14 @@
 """
 modules/nlp_parser.py — Natural Language Processing Module
 ===================================================================
-AI Pillar: Machine Learning (ML) & Knowledge Representation
-[CS188] Chapter 8: Structured Knowledge & Ontologies
-[CS188] Chapter 20: Statistical Learning — Naive Bayes (INTEGRATED)
 
-Implements an NER (Named Entity Recognition) pipeline for English
+NER (Named Entity Recognition) pipeline for English
 using regex, keyword matching, AND Machine Learning (Naive Bayes).
 
-CRITICAL INTEGRATION (ML Classifier):
+ML Classifier Integration:
     Cuisine classification uses CuisineNaiveBayesClassifier as the
     PRIMARY classification method. The ML model is trained on recipes.json
-    at initialization time. Rule-based keyword matching serves ONLY as
+    at initialization time. Rule-based keyword matching serves as
     a FALLBACK when the ML model has low confidence.
 
     Data Flow:
@@ -29,7 +26,6 @@ Extracts entities:
   - Dish Preferences: "hotpot", "pho", "pasta"
   - Target Cuisine: "Italian", "Japanese" (via ML + fallback)
 
-Tác giả: Nhóm Sinh Viên NMAI
 """
 
 import re
@@ -38,14 +34,10 @@ import os
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field
 
-# ============================================================================
 # ML CLASSIFIER INTEGRATION
-# ============================================================================
 from modules.ml_classifier import CuisineNaiveBayesClassifier
 
-# ============================================================================
 # PARSED RESULT STRUCTURE
-# ============================================================================
 @dataclass
 class ParsedInput:
     """Result of English Natural Language analysis."""
@@ -75,9 +67,7 @@ class ParsedInput:
             "confidence": round(self.confidence, 2),
         }
 
-# ============================================================================
 # ENGLISH ENTITY DICTIONARIES (DEFAULT ONTOLOGY)
-# ============================================================================
 
 HEALTH_CONDITION_PATTERNS: Dict[str, List[str]] = {
     "stomachache": [
@@ -214,9 +204,7 @@ class OntologyStructure:
     ingredients: list
     exclusions: list
 
-# ============================================================================
 # ML CUISINE CLASSIFIER — MAPPING TABLE
-# ============================================================================
 # recipes.json uses Vietnamese cuisine names, but the parser outputs English.
 # This table maps ML predictions back to the standard English labels.
 _CUISINE_ML_TO_STANDARD: Dict[str, str] = {
@@ -243,10 +231,9 @@ _CUISINE_ML_TO_STANDARD: Dict[str, str] = {
 # Confidence threshold: ML prediction is accepted only if above this.
 _ML_CONFIDENCE_THRESHOLD = 0.25
 
-
 class EnglishNLPParser:
     """
-    [CS188] Ontology-based Entity Extraction with ML Integration.
+    Entity Extraction with ML Integration.
 
     Uses Structured Knowledge (Ontologies) separated from the parsing engine,
     AND a trained Multinomial Naive Bayes classifier for cuisine classification.
@@ -259,7 +246,7 @@ class EnglishNLPParser:
     """
     def __init__(self, ontology_path: str = None):
         """
-        [CS188] Initialize parser with ontology abstraction AND ML classifier.
+        Initialize parser with ontology abstraction AND ML classifier.
 
         The ML classifier is trained on recipes.json at initialization time,
         establishing the Data → Train → Predict pipeline.
@@ -278,9 +265,7 @@ class EnglishNLPParser:
             self.ontology.ingredients, key=len, reverse=True
         )
 
-        # ================================================================
-        # ML CLASSIFIER INITIALIZATION (CRITICAL INTEGRATION)
-        # ================================================================
+        # ML CLASSIFIER INITIALIZATION (Integration)
         self.ml_classifier = CuisineNaiveBayesClassifier()
         self._train_ml_classifier()
 
@@ -292,8 +277,8 @@ class EnglishNLPParser:
           1. Kaggle Food.com dataset (thousands of recipes) — PRIMARY
           2. recipes.json (25 recipes) — FALLBACK only
 
-        CRITICAL: Previously trained on recipes.json (25 samples) which
-        is mock-level data. Now uses download_recipe_dataset() to get
+        Note: Previously trained on recipes.json (25 samples) which
+        Previously used local JSON. Now uses download_recipe_dataset() to get
         the real Kaggle data with proper cuisine labels.
         """
         base_dir = os.path.join(
@@ -303,9 +288,7 @@ class EnglishNLPParser:
         training_data = []
         source = ""
 
-        # ============================================================
         # TIER 1: Kaggle cached dataset (thousands of recipes)
-        # ============================================================
         kaggle_cache = os.path.join(base_dir, 'recipes_kaggle.json')
         if os.path.exists(kaggle_cache):
             try:
@@ -325,9 +308,7 @@ class EnglishNLPParser:
             except Exception:
                 pass
 
-        # ============================================================
         # TIER 2: recipes.json fallback (25 recipes)
-        # ============================================================
         if not training_data:
             recipes_path = os.path.join(base_dir, 'recipes.json')
             if os.path.exists(recipes_path):
@@ -476,9 +457,8 @@ class EnglishNLPParser:
             if any(kw in text_lower for kw in keywords):
                 result.dish_preferences.append(dish)
 
-        # ================================================================
         # 6. TARGET CUISINE — ML NAIVE BAYES CLASSIFICATION
-        #    [CS188 Ch.20] The trained ML model is the SOLE decision maker.
+        #    The trained ML model is the SOLE decision maker.
         #    NER extracts ingredients → ML model.predict(ingredients) → cuisine
         #    No IF-ELSE regex fallback. This is the real ML pipeline.
         #
@@ -486,7 +466,6 @@ class EnglishNLPParser:
         #      User: "tôi muốn nấu món gì có bò, phở và ớt"
         #      → NER: ["beef", "noodle", "chili"]
         #      → Naive Bayes: P(Vietnamese|features) = argmax → "Vietnamese"
-        # ================================================================
         ml_cuisine, ml_confidence = self._classify_cuisine_ml(
             result.ingredients, text
         )

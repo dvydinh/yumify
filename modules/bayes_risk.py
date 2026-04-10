@@ -2,35 +2,28 @@
 """
 modules/bayes_risk.py — Expert Bayesian Network and Expected Utility
 ====================================================================
-AI Pillar: Bayesian Network & Expected Utility Theory (L.O.2.2)
-[CS188] Chapter 13-16: Quantifying Uncertainty & Making Simple Decisions
 
-Implements an Expert-driven Bayesian Network using Subjectivist
-Probabilities and Expected Utility Theory.
+Bayesian Network using CPT probabilities and Expected Utility Theory.
 
-Tác giả: Nhóm Sinh Viên NMAI
 """
 
 import math
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field
 
-
-# ============================================================================
 # CẤU TRÚC DỮ LIỆU
-# ============================================================================
 
 @dataclass
 class BayesResult:
     """
-    Kết quả đánh giá từ Expert-driven Bayesian Network.
+    Kết quả đánh giá từ Bayesian Network.
 
     Attributes:
         preference_score: P(Like | Evidence) ∈ [0, 1] — Posterior probability
         risk_score: P(DigestiveRisk | Ingredients) ∈ [0, 1]
         risk_level: Discretized risk: "thấp", "trung bình", "cao"
         preference_label: Discretized preference label
-        feature_contributions: Đóng góp của từng Chance Node vào posterior
+        feature_contributions: Đóng góp của từng feature vào posterior
         risk_factors: Chi tiết các yếu tố rủi ro phát hiện được
         explanation: Giải thích kết quả bằng ngôn ngữ tự nhiên
     """
@@ -55,11 +48,8 @@ class BayesResult:
             "explanation": self.explanation,
         }
 
-
-# ============================================================================
 # CONDITIONAL PROBABILITY TABLES (CPTs)
-# Expert-elicited Subjectivist Probabilities
-# ============================================================================
+# CPT probabilities
 
 # P(feature | Like) — Likelihood table
 # Xác suất có điều kiện: quan sát thấy feature khi người dùng THÍCH món
@@ -126,13 +116,10 @@ EXPERT_CPT_NOT_LIKE: Dict[str, float] = {
 PRIOR_LIKE = 0.6
 PRIOR_NOT_LIKE = 0.4
 
-
-# ============================================================================
-# DIGESTIVE RISK CPTs (Expert-elicited Risk Factors)
-# ============================================================================
+# DIGESTIVE RISK CPTs (Risk Factors)
 
 # P(Risk | Ingredient/Tag) — Conditional risk probabilities
-# Mỗi entry biểu diễn một Chance Node trong Bayesian Network cho rủi ro
+# Mỗi entry biểu diễn một feature trong Bayesian Network cho rủi ro
 DIGESTIVE_RISK_CPT: Dict[str, Dict[str, Any]] = {
     # English keys to match Kaggle dataset ingredient names
     "spicy":          {"prior_risk": 0.35, "description": "Capsaicin irritates gastric mucosa"},
@@ -161,9 +148,7 @@ DIGESTIVE_RISK_CPT: Dict[str, Dict[str, Any]] = {
     "pepper":         {"prior_risk": 0.15, "description": "Piperine mild gastric irritant"},
 }
 
-# ============================================================================
 # SYNERGY RISK CPT — Hidden Causes for Noisy-OR (replaces illegal multipliers)
-# ============================================================================
 # When multiple risk factors co-occur, their SYNERGY creates an additional
 # hidden cause in the Noisy-OR model. Instead of multiplying P(Risk) by a
 # constant (which violates Kolmogorov), we treat the synergy as an
@@ -218,9 +203,7 @@ SYNERGY_RISK_CPT: List[Dict[str, Any]] = [
     },
 ]
 
-# ============================================================================
 # HEALTH-CONDITIONAL RISK CPT — P(Risk | factor, health_condition)
-# ============================================================================
 # Instead of multiplying prior_risk * 1.5 (which can exceed 1.0 or violate
 # probability axioms), we define explicit conditional probabilities.
 # P(Risk | factor, condition) is directly specified by domain experts.
@@ -255,21 +238,13 @@ HEALTH_CONDITIONAL_RISK_CPT: Dict[str, Dict[str, float]] = {
     },
 }
 
-
-# ============================================================================
 # BAYESIAN RECIPE EVALUATOR
-# Expert-driven Bayesian Network + Expected Utility
-# ============================================================================
+# Bayesian Network + Expected Utility
 
 class BayesianRecipeEvaluator:
     """
-    Bộ đánh giá công thức ăn sử dụng Expert-driven Bayesian Network
+    Bộ đánh giá công thức ăn sử dụng Bayesian Network
     và Expected Utility Theory.
-
-    Mô-đun này KHÔNG phải là Machine Learning. Các xác suất được gán
-    (assigned) bởi chuyên gia dinh dưỡng theo phương pháp Expert
-    Elicitation (Subjectivist Probability — de Finetti), không phải
-    được học (learned) từ tập dữ liệu huấn luyện.
 
     Mô hình Bayesian Network:
 
@@ -293,7 +268,7 @@ class BayesianRecipeEvaluator:
     """
 
     def __init__(self):
-        """Khởi tạo Bayesian Network với Expert-elicited CPTs."""
+        """Khởi tạo Bayesian Network với CPTs."""
         self.cpt_like = EXPERT_CPT_LIKE
         self.cpt_not_like = EXPERT_CPT_NOT_LIKE
         self.prior_like = PRIOR_LIKE
@@ -302,9 +277,7 @@ class BayesianRecipeEvaluator:
         self.synergy_cpt = SYNERGY_RISK_CPT
         self.health_risk_cpt = HEALTH_CONDITIONAL_RISK_CPT
 
-    # ------------------------------------------------------------------
     # Feature Extraction (Evidence Nodes)
-    # ------------------------------------------------------------------
     def _extract_evidence(
         self,
         recipe: Dict[str, Any],
@@ -378,9 +351,7 @@ class BayesianRecipeEvaluator:
 
         return evidence
 
-    # ------------------------------------------------------------------
     # Posterior Preference Inference (Bayes' Rule in Log-space)
-    # ------------------------------------------------------------------
     def predict_preference(
         self,
         recipe: Dict[str, Any],
@@ -448,9 +419,7 @@ class BayesianRecipeEvaluator:
 
         return posterior, contributions
 
-    # ------------------------------------------------------------------
     # Digestive Risk Assessment (Independent Risk Model)
-    # ------------------------------------------------------------------
     def assess_risk(
         self,
         recipe: Dict[str, Any],
@@ -501,9 +470,7 @@ class BayesianRecipeEvaluator:
             recipe_text_parts.append(tag.lower())
         recipe_text = " ".join(recipe_text_parts)
 
-        # ============================================================
         # STEP 1: Detect individual risk factors (Independent Causes)
-        # ============================================================
         found_risks = []
         detected_factor_names = set()
         survival_product = 1.0  # ∏(1 - P(risk_i))
@@ -527,9 +494,7 @@ class BayesianRecipeEvaluator:
                     "mô_tả": info["description"]
                 })
 
-        # ============================================================
         # STEP 2: Synergy Hidden Causes (Noisy-OR Extension)
-        # ============================================================
         # When co-occurring factors create additional risk beyond their
         # independent contributions, model the synergy as a HIDDEN CAUSE
         # with its own probability. Multiply (1 - P_synergy) into the
@@ -550,9 +515,7 @@ class BayesianRecipeEvaluator:
 
         return final_risk, found_risks
 
-    # ------------------------------------------------------------------
     # Combined Evaluation (Expected Utility)
-    # ------------------------------------------------------------------
     def evaluate(
         self,
         recipe: Dict[str, Any],
@@ -650,10 +613,7 @@ class BayesianRecipeEvaluator:
 
         return result
 
-
-# ============================================================================
 # CHAY THU
-# ============================================================================
 if __name__ == "__main__":
     evaluator = BayesianRecipeEvaluator()
 
@@ -677,7 +637,7 @@ if __name__ == "__main__":
     )
 
     print("=" * 60)
-    print("Demo: Expert-driven Bayesian Network Evaluation")
+    print("Demo: Bayesian Network Evaluation")
     print("=" * 60)
     print(f"\n  Món: {sample_recipe['name']}")
     print(f"\n{result.explanation}")

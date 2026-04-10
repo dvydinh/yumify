@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-features/data_loader.py — Trình tải dữ liệu (NO MOCK DATA)
+features/data_loader.py — Trình tải dữ liệu 
 ============================================================
 Tải dữ liệu từ:
   1. CSV/JSON files đã tải from Spoonacular API (via data_downloader.py)
   2. Spoonacular API trực tiếp (nếu có key)
   3. Kaggle Food.com dataset (via feature_extractor.py)
 
-KHÔNG CÓ dữ liệu mock hardcoded. Nếu không có file data → yêu cầu chạy download.
+Yêu cầu file data tồn tại trước khi load.
 
-Tác giả: Nhóm Sinh Viên NMAI
 """
 
 import os
@@ -17,10 +16,9 @@ import csv
 import json
 from typing import List, Dict, Any, Optional
 
-
 class DataLoader:
     """
-    Trình tải dữ liệu — NO hardcoded fallback.
+    Trình tải dữ liệu — 
 
     Hỗ trợ:
     - Tải từ CSV (data/ingredients.csv, data/recipes.csv)
@@ -191,9 +189,7 @@ class DataLoader:
         except Exception as e:
             print(f" API download failed: {e}")
 
-    # ================================================================
     # TÌM KIẾM VÀ TIỆN ÍCH
-    # ================================================================
     def find_ingredient(self, name: str) -> Optional[Dict[str, Any]]:
         """Tìm nguyên liệu theo tên (case-insensitive)."""
         name_lower = name.lower()
@@ -232,10 +228,7 @@ class DataLoader:
                 total += 30000  # Giá mặc định cho nguyên liệu không tìm thấy
         return total
 
-
-# ============================================================================
 # CHẠY THỬ
-# ============================================================================
 if __name__ == "__main__":
     loader = DataLoader(data_dir=os.path.join(os.path.dirname(__file__), '..', 'data'))
     loader.load_all()

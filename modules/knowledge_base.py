@@ -2,26 +2,16 @@
 """
 modules/knowledge_base.py — Forward Chaining Inference Engine
 ==============================================================
-AI Pillar: Knowledge Representation & Propositional Logic (L.O.2.1)
-[CS188] Chapter 6: Knowledge Representation
-[CS188] Chapter 7: Logical Agents — Forward Chaining (AIMA Fig. 7.15)
 
-Implements a DOMAIN-AGNOSTIC Production System (Rule-Based Expert System).
+Production System (Rule-Based Expert System).
 
 Architecture (Russell & Norvig, Ch. 7-8):
-    - Working Memory: A Python `set` of string atoms (propositions).
+    - fact set: A Python `set` of string atoms (propositions).
     - Rule Base: A list of Horn Clauses loaded from `data/rules.json`.
       Each rule: antecedents (set) => consequents (set).
     - Inference Engine: Forward Chaining — data-driven, iterating
       until a Fixed Point (no new facts can be derived).
 
-CRITICAL DESIGN PRINCIPLE (NO HARD-CODING):
-    The Python code in this module MUST NOT contain ANY domain-specific
-    strings (e.g., "stomachache", "spicy", "chili"). All domain knowledge
-    resides exclusively in `data/rules.json`. The engine operates purely
-    on set intersection/subset operations over abstract string atoms.
-
-Tác giả: Nhóm Sinh Viên NMAI
 """
 
 import json
@@ -29,21 +19,18 @@ import os
 from typing import Dict, List, Any, Optional, Tuple, Set, FrozenSet
 from dataclasses import dataclass, field
 
-
-# ============================================================================
 # DATA STRUCTURES (Ch. 7 — Propositional Logic)
-# ============================================================================
 
 @dataclass(frozen=True)
 class HornClause:
     """
     A Horn Clause (Definite Clause) for Forward Chaining.
 
-    Logical Structure (Modus Ponens):
+    Logical Structure:
         antecedent_1 ∧ antecedent_2 ∧ ... ∧ antecedent_n  →  consequent_1 ∧ ... ∧ consequent_m
 
-    The clause is "fired" when ALL antecedents are present in Working Memory.
-    Upon firing, ALL consequents are added to Working Memory.
+    The clause is "fired" when ALL antecedents are present in fact set.
+    Upon firing, ALL consequents are added to fact set.
 
     Attributes:
         rule_id: Unique identifier for tracing/debugging.
@@ -55,14 +42,13 @@ class HornClause:
     consequents: FrozenSet[str]
 
     def is_satisfied(self, working_memory: Set[str]) -> bool:
-        """Check if ALL antecedents are a SUBSET of Working Memory (Modus Ponens)."""
+        """Check if ALL antecedents are a SUBSET of fact set."""
         return self.antecedents.issubset(working_memory)
 
     def __repr__(self) -> str:
         ant = " ∧ ".join(sorted(self.antecedents))
         con = " ∧ ".join(sorted(self.consequents))
         return f"Rule[{self.rule_id}]: ({ant}) -> ({con})"
-
 
 @dataclass
 class InferenceResult:
@@ -118,10 +104,7 @@ class InferenceResult:
             "total_derived_facts": len(self.derived_facts),
         }
 
-
-# ============================================================================
 # RULE BASE LOADER (reads from data/rules.json)
-# ============================================================================
 
 def load_rule_base(rules_path: str) -> List[HornClause]:
     """
@@ -164,16 +147,13 @@ def load_rule_base(rules_path: str) -> List[HornClause]:
 
     return clauses
 
-
-# ============================================================================
 # FORWARD CHAINING INFERENCE ENGINE (Ch. 7 — Russell & Norvig, Fig. 7.15)
-# ============================================================================
 
 class ForwardChainingEngine:
     """
-    Domain-Agnostic Forward Chaining / Data-Driven Inference Engine.
+    Forward Chaining / Data-Driven Inference Engine.
 
-    Algorithm (AIMA, Fig. 7.15 — adapted for Production Systems):
+    Algorithm (Russell & Norvig, Fig. 7.15 — adapted for Production Systems):
 
         FUNCTION Forward-Chain(KB, initial_facts):
             working_memory ← initial_facts
@@ -223,7 +203,7 @@ class ForwardChainingEngine:
                             (should never be reached with a finite KB).
 
         Returns:
-            InferenceResult containing the final Working Memory,
+            InferenceResult containing the final fact set,
             list of fired rules, and newly derived facts.
         """
         kb = rule_base if rule_base is not None else self.rule_base
@@ -234,9 +214,7 @@ class ForwardChainingEngine:
         iteration = 0
         changed = True
 
-        # ============================================================
         # MAIN LOOP: Iterate until Fixed Point (no new facts derived)
-        # ============================================================
         while changed and iteration < max_iterations:
             changed = False
             iteration += 1
@@ -247,14 +225,14 @@ class ForwardChainingEngine:
                 if clause.rule_id in fired_set:
                     continue
 
-                # CHECK: Are ALL antecedents satisfied by Working Memory?
+                # CHECK: Are ALL antecedents satisfied by fact set?
                 # This is a pure SET SUBSET operation — no domain logic.
                 if clause.is_satisfied(working_memory):
-                    # Compute NEW consequents not yet in Working Memory
+                    # Compute NEW consequents not yet in fact set
                     new_facts = clause.consequents - working_memory
 
                     if new_facts:
-                        # FIRE THE RULE: Add consequents to Working Memory
+                        # FIRE THE RULE: Add consequents to fact set
                         working_memory |= new_facts
                         fired_rule_ids.append(clause.rule_id)
                         fired_set.add(clause.rule_id)
@@ -269,10 +247,7 @@ class ForwardChainingEngine:
             derived_facts=derived,
         )
 
-
-# ============================================================================
 # DIETARY KNOWLEDGE BASE (Facade wrapping the Engine)
-# ============================================================================
 
 class DietaryKnowledgeBase:
     """
@@ -286,7 +261,7 @@ class DietaryKnowledgeBase:
 
     The facade itself is domain-AWARE (it knows about the fact
     naming convention like "condition:X"), but the ENGINE it wraps
-    is domain-AGNOSTIC.
+    is .
 
     Example:
         >>> kb = DietaryKnowledgeBase()
@@ -350,7 +325,7 @@ class DietaryKnowledgeBase:
         # Some NLP outputs are preferences, not medical conditions.
         _PREF_ALIASES = {"vegetarian", "vegan", "halal", "kosher"}
 
-        # Build initial Working Memory from user inputs
+        # Build initial fact set from user inputs
         if health_conditions:
             for cond in health_conditions:
                 key = cond.strip().lower()
@@ -370,7 +345,7 @@ class DietaryKnowledgeBase:
             for tag in excluded_tags_from_nlp:
                 initial_facts.add(f"exclude_tag:{tag}")
 
-        # Run the domain-agnostic Forward Chaining engine
+        # Run the Forward Chaining engine
         result = self.engine.infer(initial_facts)
         return result
 
@@ -422,10 +397,7 @@ class DietaryKnowledgeBase:
                 safe.append(ing)
         return safe, removed
 
-
-# ============================================================================
 # STANDALONE TEST
-# ============================================================================
 if __name__ == "__main__":
     print("=" * 60)
     print("Forward Chaining Engine — Standalone Test")

@@ -2,10 +2,8 @@
 """
 modules/csp_solver.py — Constraint Satisfaction Problem Solver
 ==============================================================
-AI Pillar: CSP / Heuristic Search (L.O.2.1)
-[CS188] Chapter 6: Constraint Satisfaction Problems
 
-Implements a CSP solver for ingredient selection with:
+CSP solver for ingredient selection with:
   - Variables: Required ingredients in a recipe.
   - Domains: Alternative ingredients in the database (same category).
   - Hard Constraints:
@@ -17,7 +15,7 @@ Implements a CSP solver for ingredient selection with:
 
 Algorithm: Backtracking + Forward Checking + MRV Heuristic
 
-CRITICAL FIX (Forward Checking):
+Forward Checking Implementation:
     Forward Checking prunes each unassigned variable's domain by checking
     BOTH constraints simultaneously:
       1. remaining_budget >= candidate_cost  (Budget feasibility)
@@ -26,17 +24,13 @@ CRITICAL FIX (Forward Checking):
 
     This dual pruning is essential for correctness (Ch. 6, Sec. 6.3).
 
-Tác giả: Nhóm Sinh Viên NMAI
 """
 
 from typing import Dict, List, Any, Optional, Tuple, Set
 from dataclasses import dataclass, field
 import copy
 
-
-# ============================================================================
 # DATA STRUCTURES
-# ============================================================================
 
 @dataclass
 class CSPSolution:
@@ -69,7 +63,6 @@ class CSPSolution:
             "message": self.message,
         }
 
-
 @dataclass
 class CSPVariable:
     """A CSP variable representing an ingredient slot."""
@@ -79,10 +72,7 @@ class CSPVariable:
     domain: List[Dict[str, Any]] = field(default_factory=list)  # Possible values
     assigned: Optional[Dict[str, Any]] = None   # Currently assigned value
 
-
-# ============================================================================
 # CSP SOLVER
-# ============================================================================
 
 class IngredientCSPSolver:
     """
@@ -232,7 +222,7 @@ class IngredientCSPSolver:
                 (Even if all OTHER remaining variables pick their maximum
                 calorie option, the total still falls below minimum.)
 
-        CRITICAL FIX (per professor's feedback):
+        Forward Checking logic:
             The original implementation assumed min_remaining_cal = 0,
             which made the lower-bound check impossible and the upper-bound
             check nearly useless. Now we pre-compute actual min/max calorie
@@ -260,9 +250,7 @@ class IngredientCSPSolver:
         if not unassigned_indices:
             return True
 
-        # ============================================================
         # PRE-COMPUTE: min/max calorie contribution per unassigned var
-        # ============================================================
         # For each unassigned variable j, compute:
         #   min_cal_j = min(candidate.calories * var.quantity) over domain
         #   max_cal_j = max(candidate.calories * var.quantity) over domain
@@ -298,15 +286,11 @@ class IngredientCSPSolver:
                 cost = candidate.get("price", 0) * var.quantity
                 cals = candidate.get("calories", 0) * var.quantity
 
-                # ============================================================
                 # CONSTRAINT 1: Budget feasibility
-                # ============================================================
                 if cost > remaining_budget:
                     continue  # Prune: exceeds remaining budget
 
-                # ============================================================
                 # CONSTRAINT 2: Calorie feasibility (Bounds Propagation)
-                # ============================================================
                 projected_cal = current_calories + cals
 
                 # Upper bound check:
@@ -517,10 +501,7 @@ class IngredientCSPSolver:
             message=f"CSP solved for '{recipe_name}' in {self._backtracks} backtracks."
         )
 
-
-# ============================================================================
 # STANDALONE TEST
-# ============================================================================
 if __name__ == "__main__":
     print("=" * 60)
     print("CSP Solver — Standalone Test")
