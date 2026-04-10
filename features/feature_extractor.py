@@ -280,11 +280,15 @@ def _parse_kaggle_csv(csv_path: str, max_recipes: int = 5000) -> List[Dict[str, 
         print(f"  [Cost] Warning: Could not load ingredients.json: {e}")
 
     recipes = []
+    cuisine_counts: Dict[str, int] = {}  # Quota tracker per cuisine
+    MAX_PER_CUISINE = max_recipes // 8    # Balanced distribution cap
+    skipped_quota = 0
+
     try:
         with open(csv_path, 'r', encoding='utf-8', errors='replace') as f:
             reader = csv.DictReader(f)
             for i, row in enumerate(reader):
-                if i >= max_recipes:
+                if len(recipes) >= max_recipes:
                     break
                 try:
                     # Parse tags (list dạng string)
@@ -316,6 +320,14 @@ def _parse_kaggle_csv(csv_path: str, max_recipes: int = 5000) -> List[Dict[str, 
                     recipe_name = row.get('name', '')
                     ing_names = [i['name'] for i in ingredients]
                     cuisine = _detect_cuisine_from_tags(tags, recipe_name, ing_names)
+
+                    # Quota-based stratified sampling:
+                    # Cap each cuisine to MAX_PER_CUISINE to prevent class imbalance
+                    cuisine_counts[cuisine] = cuisine_counts.get(cuisine, 0)
+                    if cuisine_counts[cuisine] >= MAX_PER_CUISINE:
+                        skipped_quota += 1
+                        continue
+                    cuisine_counts[cuisine] += 1
 
                     # ==========================================================
                     # COST COMPUTATION — Cross-reference with ingredients.json
@@ -374,13 +386,16 @@ def _parse_kaggle_csv(csv_path: str, max_recipes: int = 5000) -> List[Dict[str, 
                 except Exception:
                     continue
 
-        print(f"  Parsed {len(recipes)} recipes từ Kaggle CSV")
+        print(f"  Parsed {len(recipes)} recipes (skipped {skipped_quota} by quota)")
         if recipes:
             costs = [r['cost'] for r in recipes]
             print(f"  [Cost] Range: ${min(costs):.2f} — ${max(costs):.2f}, "
                   f"Mean: ${sum(costs)/len(costs):.2f}")
+            print(f"  [Cuisine] Distribution (MAX_PER_CUISINE={MAX_PER_CUISINE}):")
+            for c, n in sorted(cuisine_counts.items(), key=lambda x: -x[1]):
+                print(f"    {c:20s}: {n}")
     except Exception as e:
-        print(f"  Lỗi parse CSV: {e}")
+        print(f"  Error parsing CSV: {e}")
 
     return recipes
 
