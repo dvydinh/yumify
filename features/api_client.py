@@ -28,9 +28,7 @@ try:
 except ImportError:
     HAS_REQUESTS = False
 
-# ============================================================================
 # CONFIGURATION & CONSTANTS
-# ============================================================================
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data')
 
 @dataclass
@@ -50,10 +48,7 @@ class APIConfig:
     def has_huggingface(self) -> bool:
         return bool(self.huggingface_key)
 
-
-# ============================================================================
 # SIMPLE CACHE
-# ============================================================================
 _api_cache: Dict[str, Any] = {}
 
 def _cache_get(key: str) -> Optional[Any]:
@@ -62,10 +57,7 @@ def _cache_get(key: str) -> Optional[Any]:
 def _cache_set(key: str, value: Any):
     _api_cache[key] = value
 
-
-# ============================================================================
 # SPOONACULAR API
-# ============================================================================
 SPOONACULAR_BASE = "https://api.spoonacular.com"
 
 def spoonacular_search_recipes(
@@ -105,7 +97,6 @@ def spoonacular_search_recipes(
 
     return _fallback_recipes(query, cuisine, number)
 
-
 def spoonacular_get_recipe_info(
     recipe_id: int,
     config: Optional[APIConfig] = None
@@ -131,7 +122,6 @@ def spoonacular_get_recipe_info(
             print(f" Spoonacular recipe info failed: {e}. Using fallback.")
 
     return {}
-
 
 def spoonacular_get_price(
     ingredients: List[str],
@@ -168,7 +158,6 @@ def spoonacular_get_price(
 
     return _fallback_prices(ingredients)
 
-
 def spoonacular_get_ingredient_details(
     ingredients: List[str],
     config: Optional[APIConfig] = None
@@ -204,7 +193,7 @@ def spoonacular_get_ingredient_details(
                 cost = item.get("estimatedCost", {})
                 usd_price = cost.get("value", 0) / 100  # cents to USD
                 
-                # [CS188] Statistically Unbiased Calorie Fallback
+                # Statistically Unbiased Calorie Fallback
                 calories = None
                 nutrition = item.get("nutrition", {})
                 if nutrition:
@@ -237,9 +226,7 @@ def spoonacular_get_ingredient_details(
     _cache_set(cache_key, details)
     return details
 
-# ============================================================================
 # OPENWEATHERMAP API
-# ============================================================================
 WEATHER_BASE = "https://api.openweathermap.org/data/2.5"
 
 WEATHER_FOOD_MAP = {
@@ -283,7 +270,6 @@ class WeatherInfo:
             "city": self.city,
             "suggestion": self.food_suggestion,
         }
-
 
 def get_weather(
     city: str = "Ho Chi Minh City",
@@ -332,10 +318,7 @@ def get_weather(
     _cache_set(cache_key, info)
     return info
 
-
-# ============================================================================
 # HUGGINGFACE INFERENCE API
-# ============================================================================
 HF_API_BASE = "https://api-inference.huggingface.co/models"
 HF_TEXT_MODEL = "mistralai/Mistral-7B-Instruct-v0.2"
 HF_IMAGE_MODEL = "stabilityai/stable-diffusion-xl-base-1.0"
@@ -370,7 +353,6 @@ def hf_generate_text(
 
     return _fallback_recipe_text(prompt)
 
-
 def hf_generate_image(
     prompt: str,
     config: Optional[APIConfig] = None
@@ -392,9 +374,7 @@ def hf_generate_image(
 
     return None
 
-# ============================================================================
 # FALLBACK DATA
-# ============================================================================
 
 def _fallback_recipes(query: str, cuisine: str, number: int) -> List[Dict[str, Any]]:
     """Fallback: load recipes from local JSON."""
@@ -429,7 +409,6 @@ def _fallback_recipes(query: str, cuisine: str, number: int) -> List[Dict[str, A
         pass
     return []
 
-
 def _fallback_prices(ingredients: List[str]) -> Dict[str, float]:
     """Fallback: lookup prices directly from JSON DB without hardcoding."""
     prices = {}
@@ -446,7 +425,6 @@ def _fallback_prices(ingredients: List[str]) -> Dict[str, float]:
         pass
     return prices
 
-
 def _fallback_recipe_text(prompt: str) -> str:
     """Fallback text if offline."""
     return (
@@ -455,9 +433,7 @@ def _fallback_recipe_text(prompt: str) -> str:
         "Currently using local database fallback."
     )
 
-# ============================================================================
 # FORMATTING UTILS
-# ============================================================================
 def format_usd(amount: float) -> str:
     """Format USD currency beautifully."""
     return f"${amount:,.2f}"

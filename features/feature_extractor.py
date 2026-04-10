@@ -14,7 +14,6 @@ Hỗ trợ:
 
 Fallback: Sử dụng dữ liệu cục bộ khi API không khả dụng.
 
-Tác giả: Nhóm Sinh Viên NMAI
 """
 
 import os
@@ -48,10 +47,7 @@ except ImportError:
 KAGGLE_DATASET_SLUG = "shuyangli94/food-com-recipes-and-user-interactions"
 KAGGLE_CSV_FILENAME = "RAW_recipes.csv"
 
-
-# ============================================================================
 # CẤU TRÚC DỮ LIỆU
-# ============================================================================
 
 @dataclass
 class SimilarityMatch:
@@ -60,10 +56,7 @@ class SimilarityMatch:
     similarity: float
     rank: int
 
-
-# ============================================================================
 # TẢI DATASET THỰC TẾ
-# ============================================================================
 
 def _download_kaggle_csv(data_dir: str) -> Optional[str]:
     """
@@ -126,10 +119,7 @@ def _download_kaggle_csv(data_dir: str) -> Optional[str]:
 
     return None
 
-
-# ============================================================================
 # HEURISTIC QUANTITY ESTIMATION
-# ============================================================================
 # Kaggle Food.com CSV does not include ingredient weights.
 # Instead of hardcoding quantity=1 (which makes all AI calorie/cost
 # calculations meaningless), we estimate realistic default quantities
@@ -209,7 +199,6 @@ _QUANTITY_DEFAULTS = {
     "egg": 60,
 }
 
-
 def _estimate_ingredient_quantity(ingredient_name: str) -> int:
     """
     Estimate a realistic default quantity (grams) for an ingredient.
@@ -233,7 +222,6 @@ def _estimate_ingredient_quantity(ingredient_name: str) -> int:
     # Default for unknown ingredients
     return 80
 
-
 def _parse_kaggle_csv(csv_path: str, max_recipes: int = 5000) -> List[Dict[str, Any]]:
     """
     Parse Food.com CSV thành danh sách recipe dicts.
@@ -242,14 +230,12 @@ def _parse_kaggle_csv(csv_path: str, max_recipes: int = 5000) -> List[Dict[str, 
         name, id, minutes, contributor_id, submitted, tags, nutrition, n_steps,
         steps, description, ingredients, n_ingredients
 
-    CRITICAL: Kaggle CSV does NOT contain price/cost data.
+    Note: Kaggle CSV does NOT contain price/cost data.
     We cross-reference each ingredient name against ingredients.json
     to compute a realistic USD cost per recipe. Without this, A* Search
     degenerates into blind search (cost=0 → h(n)=0, g(n)=0).
     """
-    # ================================================================
     # PRE-LOAD ingredients.json for cost lookup
-    # ================================================================
     ingredients_db = {}
     try:
         ing_json_path = os.path.join(
@@ -329,9 +315,7 @@ def _parse_kaggle_csv(csv_path: str, max_recipes: int = 5000) -> List[Dict[str, 
                         continue
                     cuisine_counts[cuisine] += 1
 
-                    # ==========================================================
                     # COST COMPUTATION — Cross-reference with ingredients.json
-                    # ==========================================================
                     # price_usd in DB represents cost per standard unit (~1kg).
                     # We scale by actual quantity: cost = price_per_kg * (qty_g / 1000)
                     total_cost = 0.0
@@ -379,7 +363,7 @@ def _parse_kaggle_csv(csv_path: str, max_recipes: int = 5000) -> List[Dict[str, 
                         "ingredients": ingredients,
                         "steps": steps,
                         "calories": calories,
-                        "cost": round(total_cost, 2),  # CRITICAL: A* needs this!
+                        "cost": round(total_cost, 2),  # Note: A* needs this!
                         "servings": 4,
                         "source": "kaggle_foodcom"
                     })
@@ -398,7 +382,6 @@ def _parse_kaggle_csv(csv_path: str, max_recipes: int = 5000) -> List[Dict[str, 
         print(f"  Error parsing CSV: {e}")
 
     return recipes
-
 
 def _detect_cuisine_from_tags(
     tags: List[str],
@@ -522,7 +505,6 @@ def _detect_cuisine_from_tags(
 
     return "International"
 
-
 def download_recipe_dataset(
     data_dir: str = "data",
     config: Optional[Any] = None
@@ -545,7 +527,7 @@ def download_recipe_dataset(
     """
     recipes = []
 
-    # === Bước 0: Tải Kaggle Food.com dataset (REAL DATA) ===
+    # === Bước 0: Tải Kaggle Food.com dataset  ===
     kaggle_cache = os.path.join(data_dir, "recipes_kaggle.json")
     if os.path.exists(kaggle_cache):
         try:
@@ -629,10 +611,7 @@ def download_recipe_dataset(
     print(" Không tìm thấy dataset. Vui lòng kiểm tra kết nối mạng.")
     return []
 
-
-# ============================================================================
 # BỘ TRÍCH XUẤT ĐẶC TRƯNG TF-IDF
-# ============================================================================
 class RecipeFeatureExtractor:
     """
     Bộ trích xuất đặc trưng TF-IDF cho công thức nấu ăn.
@@ -849,10 +828,7 @@ class RecipeFeatureExtractor:
 
         return False
 
-
-# ============================================================================
 # CHẠY THỬ
-# ============================================================================
 if __name__ == "__main__":
     data_dir = os.path.join(os.path.dirname(__file__), '..', 'data')
     recipes = download_recipe_dataset(data_dir)

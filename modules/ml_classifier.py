@@ -2,10 +2,8 @@
 """
 modules/ml_classifier.py — Multinomial Naive Bayes Cuisine Classifier
 =====================================================================
-AI Pillar: Machine Learning (L.O.2.2)
-[CS188] Chapter 20: Statistical Learning — Naive Bayes
 
-Implements a Multinomial Naive Bayes classifier for cuisine classification
+Multinomial Naive Bayes classifier for cuisine classification
 based on ingredient word features. This module is ACTIVELY INTEGRATED
 into the NLP parsing pipeline (nlp_parser.py) to classify user intent.
 
@@ -14,13 +12,11 @@ Data Flow:  User Input → NLP Tokenize → ML Model.predict() → Cuisine Decis
 Laplace Smoothing (Add-1):
     P(word | class) = (count(word, class) + 1) / (N_class + |V|)
 
-Tác giả: Nhóm Sinh Viên NMAI
 """
 
 import math
 from typing import List, Tuple, Optional, Dict, Any
 from collections import defaultdict
-
 
 class CuisineNaiveBayesClassifier:
     """

@@ -2,9 +2,6 @@
 """
 modules/search_engine.py — A* Sequential Meal Planner
 ======================================================
-AI Pillar: Search & Optimization (L.O.2.1)
-[CS188] Chapter 3: Solving Problems by Searching
-[CS188] Chapter 4: Informed Search — A* Algorithm
 
 Solves the N-Days Meal Planning Problem using A* Search:
 
@@ -16,7 +13,7 @@ Problem Formulation:
     g(n):    Total price of recipes chosen so far (path cost).
     h(n):    (N - current_day) * min_recipe_cost_in_DB  (Admissible Heuristic).
 
-State Equivalence (CRITICAL FIX):
+State Equivalence (Optimization):
     Since the Goal Test only checks TOTAL cost and TOTAL calories
     (not which recipe is assigned to which day), permutations of
     the same recipe set are EQUIVALENT states.
@@ -26,24 +23,20 @@ State Equivalence (CRITICAL FIX):
     inserting into the visited set. This collapses permutations:
         Search space: O(R^N) → O(R^N / N!)  (Combinations, not Permutations)
 
-Admissibility Proof:
+Heuristic proof:
     h(n) = remaining_days * cheapest_recipe_cost
     Since we must choose at least one recipe per remaining day, and
     the cheapest recipe costs at least `min_cost`, h(n) <= h*(n).
     Therefore h(n) never overestimates the true remaining cost,
     satisfying the Admissible Heuristic property for A* optimality.
 
-Tác giả: Nhóm Sinh Viên NMAI
 """
 
 import heapq
 from typing import Dict, List, Any, Optional, Tuple, Set
 from dataclasses import dataclass, field
 
-
-# ============================================================================
 # DATA STRUCTURES
-# ============================================================================
 
 @dataclass(order=True)
 class MealPlanState:
@@ -64,7 +57,6 @@ class MealPlanState:
     current_day: int = field(compare=False)
     total_calories: float = field(compare=False)
     selected_recipes: Tuple[int, ...] = field(compare=False, default_factory=tuple)
-
 
 @dataclass
 class MealPlanResult:
@@ -98,10 +90,7 @@ class MealPlanResult:
             "message": self.message,
         }
 
-
-# ============================================================================
 # A* SEQUENTIAL MEAL PLANNER
-# ============================================================================
 
 class AStarMealPlanner:
     """
@@ -142,7 +131,7 @@ class AStarMealPlanner:
         """
         Compute the global minimum recipe cost for the admissible heuristic.
 
-        [CS188] Admissibility Guarantee:
+        Heuristic is admissible:
             h(n) = remaining_days * min_cost
             Since each remaining day requires at least one recipe,
             and every recipe costs >= min_cost, we have:
@@ -221,9 +210,7 @@ class AStarMealPlanner:
         min_total_cal = calorie_range_per_day[0] * days
         max_total_cal = calorie_range_per_day[1] * days
 
-        # ================================================================
         # A* SEARCH INITIALIZATION
-        # ================================================================
         h0 = self._heuristic(0, days, min_cost)
         start = MealPlanState(
             f_score=h0,
@@ -241,9 +228,7 @@ class AStarMealPlanner:
         visited: Set[Tuple[int, Tuple[int, ...]]] = set()
         nodes_explored = 0
 
-        # ================================================================
         # A* SEARCH LOOP
-        # ================================================================
         while open_set and nodes_explored < self._max_nodes:
             current = heapq.heappop(open_set)
             nodes_explored += 1
@@ -255,9 +240,7 @@ class AStarMealPlanner:
                 continue
             visited.add(state_key)
 
-            # ============================================================
             # GOAL TEST: All days planned?
-            # ============================================================
             if current.current_day == days:
                 # Check calorie bounds for the complete plan
                 if (min_total_cal <= current.total_calories <= max_total_cal
@@ -287,9 +270,7 @@ class AStarMealPlanner:
                     )
                 continue  # Calorie/budget check failed, skip
 
-            # ============================================================
             # EXPAND: Try adding each recipe for the next day
-            # ============================================================
             for recipe_idx, recipe in enumerate(candidate_recipes):
                 # If repeats not allowed, skip already-selected recipes
                 if not allow_repeats and recipe_idx in current.selected_recipes:
@@ -354,10 +335,7 @@ class AStarMealPlanner:
                     f"a valid {days}-day meal plan within budget ${budget:.2f}."
         )
 
-
-# ============================================================================
 # BACKWARD COMPATIBILITY: Shopping Cart Optimizer (single-recipe)
-# ============================================================================
 
 class AStarShoppingOptimizer:
     """
@@ -381,7 +359,7 @@ class AStarShoppingOptimizer:
         self, ingredients_db: List[Dict[str, Any]]
     ) -> float:
         """
-        [CS188] Admissibility Guarantee:
+        Heuristic is admissible:
         Find the absolute minimum ingredient price for the heuristic.
         h(n) = remaining_items * min_price <= h*(n), so h is admissible.
         """
@@ -487,10 +465,7 @@ class AStarShoppingOptimizer:
                 "nodes_explored": len(item_costs),
             }
 
-
-# ============================================================================
 # STANDALONE TEST
-# ============================================================================
 if __name__ == "__main__":
     print("=" * 60)
     print("A* Sequential Meal Planner — Standalone Test")

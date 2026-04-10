@@ -80,7 +80,6 @@ CUISINE_QUERIES = [
     ("european", "mushroom soup"),
 ]
 
-
 def fetch_ingredient_info(name: str, api_key: str) -> Optional[Dict[str, Any]]:
     """Tìm và lấy thông tin chi tiết nguyên liệu từ Spoonacular."""
     try:
@@ -132,7 +131,6 @@ def fetch_ingredient_info(name: str, api_key: str) -> Optional[Dict[str, Any]]:
     except Exception as e:
         print(f"   {name}: {e}")
         return None
-
 
 def fetch_recipe(cuisine: str, query: str, api_key: str) -> Optional[Dict[str, Any]]:
     """Tìm và lấy thông tin chi tiết công thức từ Spoonacular."""
@@ -201,7 +199,6 @@ def fetch_recipe(cuisine: str, query: str, api_key: str) -> Optional[Dict[str, A
     except Exception as e:
         print(f"   {cuisine}/{query}: {e}")
         return None
-
 
 def download_all_data(api_key: str, data_dir: str = "data"):
     """
@@ -282,7 +279,6 @@ def download_all_data(api_key: str, data_dir: str = "data"):
 
     print(f"\n Hoàn tất! {len(ingredients)} nguyên liệu + {len(recipes)} công thức")
     return ingredients, recipes
-
 
 if __name__ == "__main__":
     if len(sys.argv) < 3 or sys.argv[1] != "--api-key":
