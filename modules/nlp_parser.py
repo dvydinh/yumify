@@ -441,50 +441,24 @@ class EnglishNLPParser:
                 result.dish_preferences.append(dish)
 
         # ================================================================
-        # 6. TARGET CUISINE — ML + KEYWORD HYBRID CLASSIFICATION
-        #    This is the CRITICAL integration point where ml_classifier.py
-        #    is used in the actual data flow pipeline.
+        # 6. TARGET CUISINE — ML NAIVE BAYES CLASSIFICATION
+        #    [CS188 Ch.20] The trained ML model is the SOLE decision maker.
+        #    NER extracts ingredients → ML model.predict(ingredients) → cuisine
+        #    No IF-ELSE regex fallback. This is the real ML pipeline.
         #
-        #    Strategy:
-        #    - If user EXPLICITLY names a cuisine ("Italian", "Japanese"),
-        #      keyword matching is a strong signal → use it.
-        #    - If NO explicit cuisine keyword found, ML classifier infers
-        #      cuisine from ingredients alone → this is where ML adds
-        #      real value over rule-based systems.
-        #    - Both results are reported for transparency.
+        #    Data Flow:
+        #      User: "tôi muốn nấu món gì có bò, phở và ớt"
+        #      → NER: ["beef", "noodle", "chili"]
+        #      → Naive Bayes: P(Vietnamese|features) = argmax → "Vietnamese"
         # ================================================================
-
-        # Check keyword matching first (explicit cuisine mention)
-        keyword_cuisine = ""
-        for cuisine, keywords in self.ontology.cuisine_patterns.items():
-            if any(kw in text_lower for kw in keywords):
-                keyword_cuisine = cuisine
-                break
-
-        # ML Naive Bayes Classification (always run for logging)
         ml_cuisine, ml_confidence = self._classify_cuisine_ml(
             result.ingredients, text
         )
 
-        if keyword_cuisine:
-            # User explicitly mentioned a cuisine name → strong signal
-            result.target_cuisine = keyword_cuisine
-            result.cuisine_confidence = ml_confidence
-            result.cuisine_method = (
-                "ml+keyword_agree" if ml_cuisine == keyword_cuisine
-                else "keyword_override"
-            )
-        elif ml_cuisine and ml_confidence >= _ML_CONFIDENCE_THRESHOLD:
-            # No explicit keyword, but ML inferred a cuisine from ingredients
-            # This is the key ML value-add: inferring intent from features
+        if ml_cuisine:
             result.target_cuisine = ml_cuisine
             result.cuisine_confidence = ml_confidence
             result.cuisine_method = "ml"
-        elif ml_cuisine:
-            # ML has a guess but low confidence
-            result.target_cuisine = ml_cuisine
-            result.cuisine_confidence = ml_confidence
-            result.cuisine_method = "ml_low_confidence"
 
         # 7. Calculate Confidence
         result.confidence = self._calculate_confidence(result)

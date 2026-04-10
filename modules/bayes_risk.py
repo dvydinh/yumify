@@ -149,47 +149,56 @@ DIGESTIVE_RISK_CPT: Dict[str, Dict[str, Any]] = {
 }
 
 # ============================================================================
-# JOINT RISK CPT — Conditional Dependence (replaces illegal multipliers)
+# SYNERGY RISK CPT — Hidden Causes for Noisy-OR (replaces illegal multipliers)
 # ============================================================================
-# When multiple risk factors co-occur, their combined risk is NOT simply
-# the Noisy-OR of independent risks multiplied by a constant.
-# Instead, we define a proper Joint Conditional Probability Table:
-#   P(Risk | Factor_1 = T, Factor_2 = T)
-# These values are expert-elicited and satisfy P ∈ [0, 1].
+# When multiple risk factors co-occur, their SYNERGY creates an additional
+# hidden cause in the Noisy-OR model. Instead of multiplying P(Risk) by a
+# constant (which violates Kolmogorov), we treat the synergy as an
+# INDEPENDENT hidden cause with its own P(Risk_synergy).
 #
-# The combined risk is computed as:
-#   P_final = max(P_noisy_or, P_joint)
-# This is a conservative union that respects probability axioms.
-JOINT_RISK_CPT: Dict[frozenset, Dict[str, Any]] = {
-    frozenset({"spicy", "dầu"}): {
-        "joint_risk": 0.55,
+# The combined Noisy-OR then becomes:
+#   P(Risk) = 1 - ∏(1 - P_i) × ∏(1 - P_synergy_j)
+#
+# This naturally satisfies P ∈ [0, 1] without any min() clamping.
+# Reference: Henrion (1989), "Some Practical Issues in Constructing
+#            Belief Networks", UAI'89.
+SYNERGY_RISK_CPT: List[Dict[str, Any]] = [
+    {
+        "factors": {"spicy", "dầu"},
+        "synergy_risk": 0.40,
         "reason": "Cay + dầu gây kích ứng kép trên niêm mạc dạ dày"
     },
-    frozenset({"ớt", "dầu"}): {
-        "joint_risk": 0.58,
+    {
+        "factors": {"ớt", "dầu"},
+        "synergy_risk": 0.45,
         "reason": "Capsaicin + dầu mỡ tăng nguy cơ trào ngược"
     },
-    frozenset({"sa tế", "dầu"}): {
-        "joint_risk": 0.60,
+    {
+        "factors": {"sa tế", "dầu"},
+        "synergy_risk": 0.50,
         "reason": "Sa tế chứa cả ớt lẫn dầu, gây kích ứng mạnh"
     },
-    frozenset({"seafood", "spicy"}): {
-        "joint_risk": 0.50,
+    {
+        "factors": {"seafood", "spicy"},
+        "synergy_risk": 0.35,
         "reason": "Hải sản cay tăng nguy cơ phản ứng dị ứng"
     },
-    frozenset({"seafood", "ớt"}): {
-        "joint_risk": 0.52,
+    {
+        "factors": {"seafood", "ớt"},
+        "synergy_risk": 0.38,
         "reason": "Hải sản + capsaicin tăng kích ứng tiêu hóa"
     },
-    frozenset({"sữa", "spicy"}): {
-        "joint_risk": 0.45,
+    {
+        "factors": {"sữa", "spicy"},
+        "synergy_risk": 0.30,
         "reason": "Casein + capsaicin khó phân giải trong dạ dày"
     },
-    frozenset({"sữa", "ớt"}): {
-        "joint_risk": 0.48,
+    {
+        "factors": {"sữa", "ớt"},
+        "synergy_risk": 0.32,
         "reason": "Lactose + capsaicin gây co thắt ruột"
     },
-}
+]
 
 # ============================================================================
 # HEALTH-CONDITIONAL RISK CPT — P(Risk | factor, health_condition)
@@ -250,8 +259,9 @@ class BayesianRecipeEvaluator:
     1. Posterior Preference Inference:
        P(Like | e₁, e₂, ..., eₙ) sử dụng Bayes' Rule trong log-space
 
-    2. Risk Assessment qua Independent Risk Model:
-       P(Risk) = 1 - ∏(1 - P(Riskᵢ)) với interaction multipliers
+    2. Risk Assessment qua Extended Noisy-OR Model:
+       P(Risk) = 1 - ∏(1 - P(Riskᵢ)) × ∏(1 - P(Synergy_j))
+       Synergy hidden causes model conditional dependence.
     """
 
     def __init__(self):
@@ -261,7 +271,7 @@ class BayesianRecipeEvaluator:
         self.prior_like = PRIOR_LIKE
         self.prior_not_like = PRIOR_NOT_LIKE
         self.risk_cpt = DIGESTIVE_RISK_CPT
-        self.joint_risk_cpt = JOINT_RISK_CPT
+        self.synergy_cpt = SYNERGY_RISK_CPT
         self.health_risk_cpt = HEALTH_CONDITIONAL_RISK_CPT
 
     # ------------------------------------------------------------------
@@ -420,23 +430,32 @@ class BayesianRecipeEvaluator:
         ingredients_db: Optional[List[Dict[str, Any]]] = None
     ) -> Tuple[float, List[Dict[str, Any]]]:
         """
-        Đánh giá rủi ro tiêu hóa sử dụng Noisy-OR + Joint CPT.
+        Đánh giá rủi ro tiêu hóa sử dụng Extended Noisy-OR Model.
 
-        Mô hình xác suất:
+        Mô hình xác suất (Noisy-OR mở rộng với Synergy Hidden Causes):
 
-        Bước 1 — Noisy-OR (Independent Risk Model):
-            P_indep(Risk) = 1 - ∏ᵢ (1 - P(Riskᵢ))
+        Bước 1 — Independent Noisy-OR:
+            survival_product = ∏ᵢ (1 - P(Riskᵢ))
+            Mỗi yếu tố rủi ro i là một nguyên nhân độc lập.
 
-        Bước 2 — Joint CPT Correction (Conditional Dependence):
-            Nếu tổ hợp factors (A, B) xuất hiện đồng thời:
-                P_joint = JOINT_RISK_CPT[{A, B}]
-                P_final = max(P_indep, P_joint)
-            Phép max() thỏa mãn tiên đề xác suất: P_final ∈ [0, 1]
-            vì cả P_indep và P_joint đều ∈ [0, 1].
+        Bước 2 — Synergy Hidden Causes (Conditional Dependence):
+            Khi 2 yếu tố (A, B) xuất hiện đồng thời, sự hiệp đồng (synergy)
+            của chúng được mô hình hóa như một nguyên nhân ẩn (hidden cause)
+            với xác suất độc lập P_synergy:
+                survival_product *= (1 - P_synergy)
 
-        Bước 3 — Health Condition CPT:
-            P(Risk | factor, condition) tra từ HEALTH_CONDITIONAL_RISK_CPT
-            thay vì nhân prior_risk với hằng số (vi phạm Kolmogorov).
+            Điều này tương đương với việc thêm một node cha
+            mới vào Bayesian Network:
+                [Spicy]──┐   [Dầu]───┐   [Synergy(Spicy∩Dầu)]─┐
+                       └───┴────────┴──────────────────┘
+                              [DigestiveRisk]
+
+        Kết quả: P(Risk) = 1 - survival_product
+        Luôn hội tụ trong [0, 1] một cách tự nhiên theo lý thuyết Noisy-OR,
+        không cần min(0.95, ...) để ép kiểu.
+
+        Ref: Henrion (1989), "Some Practical Issues in Constructing
+             Belief Networks", UAI'89.
 
         Args:
             recipe: Công thức nấu ăn
@@ -455,10 +474,10 @@ class BayesianRecipeEvaluator:
         recipe_text = " ".join(recipe_text_parts)
 
         # ============================================================
-        # STEP 1: Detect individual risk factors and compute Noisy-OR
+        # STEP 1: Detect individual risk factors (Independent Causes)
         # ============================================================
         found_risks = []
-        detected_factor_names = set()  # Track which factors are present
+        detected_factor_names = set()
         survival_product = 1.0  # ∏(1 - P(risk_i))
 
         for factor, info in self.risk_cpt.items():
@@ -466,13 +485,10 @@ class BayesianRecipeEvaluator:
                 risk_prob = info["prior_risk"]
 
                 # Health Condition CPT: P(Risk | factor, condition)
-                # Uses explicit CPT values instead of arbitrary multiplication
                 if health_conditions:
                     for cond in health_conditions:
                         cond_cpt = self.health_risk_cpt.get(cond, {})
                         if factor in cond_cpt:
-                            # Use the conditional probability from CPT
-                            # P(Risk | factor, condition) ≥ P(Risk | factor)
                             risk_prob = cond_cpt[factor]
 
                 survival_product *= (1.0 - risk_prob)
@@ -483,27 +499,26 @@ class BayesianRecipeEvaluator:
                     "mô_tả": info["description"]
                 })
 
-        # Base risk from Noisy-OR: P(Risk) = 1 - ∏(1 - P_i)
-        noisy_or_risk = 1.0 - survival_product
-
         # ============================================================
-        # STEP 2: Joint CPT Correction (Conditional Dependence)
+        # STEP 2: Synergy Hidden Causes (Noisy-OR Extension)
         # ============================================================
-        # Check if any factor combinations have a joint CPT entry.
-        # If so, use max(noisy_or, joint) — a mathematically valid
-        # combination that respects P ∈ [0, 1].
-        final_risk = noisy_or_risk
+        # When co-occurring factors create additional risk beyond their
+        # independent contributions, model the synergy as a HIDDEN CAUSE
+        # with its own probability. Multiply (1 - P_synergy) into the
+        # survival product. This is mathematically sound Noisy-OR.
+        for synergy in self.synergy_cpt:
+            if synergy["factors"].issubset(detected_factor_names):
+                synergy_risk = synergy["synergy_risk"]
+                survival_product *= (1.0 - synergy_risk)
+                found_risks.append({
+                    "yếu_tố": " + ".join(sorted(synergy["factors"])),
+                    "xác_suất": round(synergy_risk, 3),
+                    "mô_tả": f"Synergy (hidden cause): {synergy['reason']}"
+                })
 
-        for factor_set, joint_info in self.joint_risk_cpt.items():
-            if factor_set.issubset(detected_factor_names):
-                joint_prob = joint_info["joint_risk"]
-                if joint_prob > final_risk:
-                    final_risk = joint_prob
-                    found_risks.append({
-                        "yếu_tố": " + ".join(sorted(factor_set)),
-                        "xác_suất": round(joint_prob, 3),
-                        "mô_tả": f"Joint CPT: {joint_info['reason']}"
-                    })
+        # Final risk: P(Risk) = 1 - survival_product
+        # Naturally in [0, 1] — no clamping needed.
+        final_risk = 1.0 - survival_product
 
         return final_risk, found_risks
 

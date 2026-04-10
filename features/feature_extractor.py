@@ -127,6 +127,113 @@ def _download_kaggle_csv(data_dir: str) -> Optional[str]:
     return None
 
 
+# ============================================================================
+# HEURISTIC QUANTITY ESTIMATION
+# ============================================================================
+# Kaggle Food.com CSV does not include ingredient weights.
+# Instead of hardcoding quantity=1 (which makes all AI calorie/cost
+# calculations meaningless), we estimate realistic default quantities
+# based on ingredient type, using a category-keyword mapping derived
+# from ingredients.json.
+#
+# Reference: USDA Standard Portion Sizes
+#   - Meat/Poultry: ~200g per serving
+#   - Seafood: ~150g per serving
+#   - Vegetables/Produce: ~100g per serving
+#   - Grains/Carbs: ~150g per serving
+#   - Dairy/Cheese: ~50g per serving
+#   - Spices/Seasonings: ~5g per serving
+#   - Oils/Liquids: ~15ml per serving
+#   - Default (unknown): ~80g
+
+_QUANTITY_CATEGORY_MAP = {
+    # Meat & Poultry (200g default)
+    "meat": [
+        "beef", "pork", "chicken", "duck", "lamb", "turkey", "veal",
+        "bacon", "sausage", "ham", "steak", "ground", "mince", "chuck",
+    ],
+    # Seafood (150g default)
+    "seafood": [
+        "shrimp", "fish", "salmon", "tuna", "crab", "squid", "clam",
+        "oyster", "lobster", "scallop", "anchov", "prawn", "mussel",
+    ],
+    # Vegetables & Produce (100g default)
+    "produce": [
+        "tomato", "onion", "garlic", "carrot", "potato", "pepper",
+        "mushroom", "spinach", "broccoli", "cabbage", "lettuce",
+        "celery", "cucumber", "corn", "bean", "pea", "zucchini",
+        "eggplant", "avocado", "lemon", "lime", "ginger",
+    ],
+    # Grains & Carbs (150g default)
+    "grain": [
+        "rice", "pasta", "noodle", "bread", "flour", "tortilla",
+        "couscous", "quinoa", "oat", "cereal", "fettuccine", "penne",
+        "spaghetti", "udon", "ramen",
+    ],
+    # Dairy (50g default)
+    "dairy": [
+        "cheese", "mozzarella", "parmesan", "cream", "butter", "milk",
+        "yogurt", "sour cream", "creme", "gruyère",
+    ],
+    # Spices & Seasonings (5g default)
+    "spice": [
+        "salt", "pepper", "cumin", "paprika", "turmeric", "cinnamon",
+        "oregano", "basil", "thyme", "rosemary", "bay", "chili",
+        "cardamom", "anise", "mustard", "wasabi", "chilli",
+        "coriander", "mint", "parsley", "dill", "sage",
+    ],
+    # Sauces & Liquids (15ml default)
+    "sauce": [
+        "oil", "vinegar", "sauce", "soy", "wine", "sake", "broth",
+        "stock", "water", "juice", "honey", "syrup", "ketchup",
+    ],
+    # Sugars (30g default)
+    "sugar": [
+        "sugar", "brown sugar", "caster", "icing", "molasses",
+    ],
+    # Eggs (1 unit ≈ 60g)
+    "egg": [
+        "egg",
+    ],
+}
+
+_QUANTITY_DEFAULTS = {
+    "meat": 200,
+    "seafood": 150,
+    "produce": 100,
+    "grain": 150,
+    "dairy": 50,
+    "spice": 5,
+    "sauce": 15,
+    "sugar": 30,
+    "egg": 60,
+}
+
+
+def _estimate_ingredient_quantity(ingredient_name: str) -> int:
+    """
+    Estimate a realistic default quantity (grams) for an ingredient.
+
+    Uses keyword matching against a category map derived from
+    ingredients.json categories and USDA standard portion sizes.
+
+    Args:
+        ingredient_name: Ingredient name string from CSV.
+
+    Returns:
+        Estimated quantity in grams.
+    """
+    name_lower = ingredient_name.lower()
+
+    for category, keywords in _QUANTITY_CATEGORY_MAP.items():
+        for keyword in keywords:
+            if keyword in name_lower:
+                return _QUANTITY_DEFAULTS[category]
+
+    # Default for unknown ingredients
+    return 80
+
+
 def _parse_kaggle_csv(csv_path: str, max_recipes: int = 5000) -> List[Dict[str, Any]]:
     """
     Parse Food.com CSV thành danh sách recipe dicts.
@@ -147,11 +254,18 @@ def _parse_kaggle_csv(csv_path: str, max_recipes: int = 5000) -> List[Dict[str, 
                     tags_str = row.get('tags', '[]')
                     tags = [t.strip("' ") for t in tags_str.strip('[]').split(',')][:5]
 
-                    # Parse ingredients
+                    # Parse ingredients — with HEURISTIC QUANTITY ESTIMATION
+                    # Instead of hardcoded quantity=1 (which makes all AI
+                    # calorie/cost calculations meaningless), we estimate
+                    # realistic quantities based on ingredient category.
                     ing_str = row.get('ingredients', '[]')
                     ing_list = [i.strip("' ") for i in ing_str.strip('[]').split(',')]
                     ingredients = [
-                        {"name": name.strip(), "quantity": 1, "unit": "phần"}
+                        {
+                            "name": name.strip(),
+                            "quantity": _estimate_ingredient_quantity(name.strip()),
+                            "unit": "g"
+                        }
                         for name in ing_list[:10] if name.strip()
                     ]
 
