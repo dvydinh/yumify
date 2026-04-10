@@ -1,0 +1,209 @@
+% ===========================================================================
+\section{Các thuật toán sử dụng}
+% ===========================================================================
+
+\subsection{Trụ cột 1: Học máy --- NER + TF-IDF + Naive Bayes}
+\label{sec:ml}
+
+\subsubsection{NLP Parser (NER)}
+\textbf{Input:} Văn bản tự do $T$ (tiếng Anh). \textbf{Output:} Vector thực thể $E = (e_{\text{budget}}, e_{\text{health}}, e_{\text{ingredients}}, e_{\text{cuisine}})$.
+
+Sử dụng Ontology-based Entity Extraction: danh sách nguyên liệu, tình trạng sức khỏe, và budget patterns được đối chiếu qua bảng từ vựng mở rộng. Fallback: regex pattern matching cho các dạng budget (\texttt{\$10}, \texttt{budget 15}).
+
+\begin{equation}
+\text{confidence}(E) = \frac{\sum_{i=1}^{4} w_i \cdot \mathbb{1}[e_i \neq \emptyset]}{\sum_{i=1}^{4} w_i}, \quad w = (1.0, 1.0, 0.8, 0.7)
+\end{equation}
+
+\subsubsection{TF-IDF Feature Extraction}
+Dataset: Kaggle Food.com (hàng nghìn công thức qua stratified sampling) hoặc 25 công thức cục bộ (\texttt{recipes.json}). Ma trận TF-IDF được tạo tại runtime và lưu dưới dạng \texttt{data/tfidf\_features.npy} (NumPy).
+
+\begin{equation}
+\text{TF}(t,d) = \frac{f(t,d)}{\max_{t' \in d} f(t',d)}, \quad
+\text{IDF}(t) = \log\frac{N}{|\{d \in D : t \in d\}| + 1} + 1
+\end{equation}
+\begin{equation}
+\text{TF-IDF}(t,d) = \text{TF}(t,d) \times \text{IDF}(t)
+\end{equation}
+\textbf{Cosine Similarity} dùng để xếp hạng mức phù hợp giữa truy vấn và công thức:
+\begin{equation}
+\cos(\vec{q}, \vec{d}) = \frac{\vec{q} \cdot \vec{d}}{||\vec{q}||_2 \times ||\vec{d}||_2}
+\end{equation}
+
+\subsubsection{Naive Bayes Classifier (Cuisine Classification)}
+Module \texttt{ml\_classifier.py} triển khai Multinomial Naive Bayes với Laplace smoothing để phân loại ẩm thực dựa trên nguyên liệu đầu vào:
+\begin{equation}
+P(C \mid I_1, \ldots, I_n) = \frac{P(C) \prod_{i=1}^{n} P(I_i \mid C)}{P(I_1, \ldots, I_n)}
+\end{equation}
+Trong đó $C$ là lớp ẩm thực (Italian, Japanese, Korean, ...), $I_i$ là nguyên liệu thứ $i$. Mô hình được \textbf{huấn luyện (trained)} từ dataset thực tế --- đây là thành phần Machine Learning duy nhất có xác suất \textbf{learned from data}.
+
+\textbf{Stratified Sampling:} Khi parse Kaggle CSV, hệ thống áp dụng quota-based sampling (\texttt{MAX\_PER\_CUISINE = max\_recipes / 8}) để cân bằng phân bố nhãn giữa các cuisines, tránh class imbalance.
+
+\subsection{Trụ cột 2: Biểu diễn \& Tìm kiếm --- A*}
+\label{sec:search}
+
+\textbf{Bài toán:} N-Days Meal Planning --- chọn $N$ công thức (một cho mỗi ngày) sao cho tổng chi phí $\leq$ budget và tổng calo trong khoảng cho phép.
+
+\textbf{Định nghĩa hình thức:}
+\begin{itemize}
+  \item \textbf{State} $S = (\text{day}, C_{\text{total}}, \text{Cal}_{\text{total}}, R_{\text{selected}})$: Tuple gồm ngày đã lên kế hoạch, tổng chi phí, tổng calo, và sorted multiset công thức đã chọn
+  \item \textbf{Initial State} $S_0 = (0, 0, 0, \emptyset)$
+  \item \textbf{Action} $a$: Chọn công thức $r$ cho ngày tiếp theo, $S' = (\text{day}+1, C + \text{cost}(r) + \text{penalty}(r), \text{Cal} + \text{cal}(r), R \cup \{r\})$
+  \item \textbf{Goal} $G$: $\text{day} = N$ $\wedge$ $C_{\text{total}} \leq B$ $\wedge$ $\text{Cal}_{\min} \times N \leq \text{Cal}_{\text{total}} \leq \text{Cal}_{\max} \times N$
+  \item \textbf{Cost} $g(S) = \sum_{r \in R_{\text{selected}}} \text{cost}(r) + \text{penalty}(r)$
+  \item \textbf{Heuristic} $h(S) = (N - \text{day}) \times \min_{r \in \text{candidates}} \text{cost}(r)$
+\end{itemize}
+
+\begin{equation}
+f(S) = g(S) + h(S), \quad h \text{ admissible vì } h(S) \leq h^*(S)
+\end{equation}
+
+\textbf{Chứng minh Admissibility:} $h(S)$ ước lượng chi phí còn lại bằng (số ngày còn lại) $\times$ (giá công thức rẻ nhất). Vì mỗi ngày cần ít nhất 1 công thức có giá $\geq \min\_\text{cost}$, nên $h(S) \leq h^*(S)$ luôn đúng.
+
+\textbf{Canonical State Representation:} Sorted multiset gộp hoán vị thành tổ hợp, giảm search space:
+\begin{equation}
+O(R^N) \rightarrow O\left(\frac{R^N}{N!}\right) = O(C(R,N))
+\end{equation}
+
+\textbf{Repetition Penalty:} Khi công thức $r$ đã xuất hiện $k$ lần trong plan:
+\begin{equation}
+\text{penalty}(r) = \text{cost}(r) \times 2^k + \begin{cases} \text{cost}(r) \times 3.0 & \text{nếu lặp ngày liên tiếp} \\ 0 & \text{ngược lại} \end{cases}
+\end{equation}
+
+\begin{algorithm}[H]
+\caption{A* Search cho N-Days Meal Planning}
+\begin{algorithmic}[1]
+\REQUIRE Candidate recipes $\mathcal{R}$, ngân sách $B$, số ngày $N$, khoảng calo $(c_{\min}, c_{\max})$
+\ENSURE Meal plan tối ưu hoặc thất bại
+\STATE $\text{open} \leftarrow \{ S_0 \}$, $\text{visited} \leftarrow \emptyset$, $\text{min\_cost} \leftarrow \min_{r \in \mathcal{R}} \text{cost}(r)$
+\WHILE{$\text{open} \neq \emptyset$}
+    \STATE $S \leftarrow$ pop state có $f(S)$ nhỏ nhất
+    \STATE $\text{key} \leftarrow (\text{day}, \text{sorted}(R_{\text{selected}}))$ \COMMENT{Canonical form}
+    \IF{$\text{key} \in \text{visited}$} \textbf{continue} \ENDIF
+    \STATE $\text{visited} \leftarrow \text{visited} \cup \{\text{key}\}$
+    \IF{$\text{day} = N$ \AND $C_{\text{total}} \leq B$ \AND $c_{\min} \times N \leq \text{Cal}_{\text{total}} \leq c_{\max} \times N$}
+        \RETURN $S$ (Goal reached)
+    \ENDIF
+    \FOR{$r \in \mathcal{R}$}
+        \STATE $\text{pen} \leftarrow$ compute\_penalty($r$, $R_{\text{selected}}$)
+        \STATE $g' \leftarrow g(S) + \text{cost}(r) + \text{pen}$
+        \IF{$g' > B$} \textbf{continue} \ENDIF \COMMENT{Prune by budget}
+        \STATE Push $S'$ with $f' = g' + (N - \text{day} - 1) \times \text{min\_cost}$
+    \ENDFOR
+\ENDWHILE
+\RETURN Thất bại
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Trụ cột 3: Heuristic/CSP --- Ràng buộc}
+\label{sec:csp}
+
+$X = \{x_1, \ldots, x_m\}$ (vị trí nguyên liệu trong công thức), $D_i$ = \{nguyên liệu cùng category trong \texttt{ingredients.json}\}.
+\begin{align}
+C_1&: \sum_{i} \text{price}(x_i) \times \frac{\text{qty}(x_i)}{1000} \leq B \quad \text{(ràng buộc ngân sách)} \\
+C_2&: \text{cal}_{\min} \leq \sum_{i} \text{cal}(x_i) \times \text{qty}(x_i) \leq \text{cal}_{\max} \quad \text{(ràng buộc calo)}
+\end{align}
+
+Thuật toán: Backtracking kết hợp Forward Checking và MRV Heuristic.
+
+\textbf{Kỹ thuật cốt lõi --- Dual-constraint Pruning với Bounds Propagation:}
+Trước khi duyệt candidate cho mỗi biến chưa gán, hệ thống tính trước cận trên/dưới calo:
+\begin{align}
+&\text{IF } (\text{cal\_current} + \text{cal\_candidate} + \text{min\_future\_cals}) > \text{cal}_{\max}: \text{prune} \\
+&\text{IF } (\text{cal\_current} + \text{cal\_candidate} + \text{max\_future\_cals}) < \text{cal}_{\min}: \text{prune}
+\end{align}
+
+\begin{algorithm}[H]
+\caption{CSP Backtracking với Forward Checking, MRV, và Dual-constraint Pruning}
+\begin{algorithmic}[1]
+\REQUIRE Phép gán hiện tại $\text{assign}$, Tập biến $X$, Miền giá trị $D$
+\ENSURE Phép gán hoàn chỉnh hoặc thất bại
+\IF{$\text{assign}$ hoàn chỉnh}
+    \RETURN $\text{assign}$
+\ENDIF
+\STATE Chọn biến chưa gán $v \in X$ có miền giá trị còn lại nhỏ nhất (MRV)
+\FOR{mỗi giá trị $\text{val} \in D_v$}
+    \STATE Kiểm tra ràng buộc ngân sách: $\text{cost\_so\_far} + \text{price}(\text{val}) \times \text{qty}/1000 \leq B$
+    \STATE Kiểm tra cận calo: Dual-constraint Bounds Propagation
+    \IF{tất cả ràng buộc thỏa mãn}
+        \STATE Thêm $\{v = \text{val}\}$ vào $\text{assign}$
+        \STATE Cập nhật miền của các biến chưa gán (Forward Checking)
+        \STATE $\text{result} \leftarrow$ Backtrack($\text{assign}, X, D$)
+        \IF{$\text{result} \neq$ Thất bại}
+            \RETURN $\text{result}$
+        \ENDIF
+        \STATE Phục hồi $\text{assign}$ và miền
+    \ENDIF
+\ENDFOR
+\RETURN Thất bại
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Trụ cột 4: Biểu diễn \& Suy luận Tri thức --- Forward Chaining}
+\label{sec:logic}
+
+Module \texttt{knowledge\_base.py} triển khai Hệ chuyên gia theo Russell \& Norvig, Ch. 7.
+
+\textbf{Cấu trúc tri thức:}
+\begin{itemize}
+  \item \textbf{Fact:} Mệnh đề nguyên tử dạng \texttt{prefix:argument} --- VD: \texttt{condition:stomachache}, \texttt{exclude\_ingredient:chili}
+  \item \textbf{HornClause:} Luật dạng $\text{antecedents} \Rightarrow \text{consequents}$, lưu trong \texttt{data/rules.json}
+\end{itemize}
+
+\textbf{Forward Chaining Engine} (Domain-agnostic):
+\begin{enumerate}
+  \item Khởi tạo Working Memory = tập facts ban đầu (\texttt{condition:X} từ health conditions)
+  \item Lặp: Với mỗi HornClause trong Knowledge Base, nếu tất cả antecedents $\subseteq$ Working Memory AND clause chưa fired $\to$ thêm consequents vào Working Memory
+  \item Dừng khi đạt fixed point (không có fact mới)
+  \item Trích xuất exclusions: \texttt{exclude\_ingredient:X}, \texttt{exclude\_tag:X}, \texttt{warning:X}
+\end{enumerate}
+
+Hệ thống có \textbf{7 luật y khoa} bao phủ: stomachache, diabetes, pregnancy, hypertension, gout, seafood allergy, vegetarian.
+
+\begin{algorithm}[H]
+\caption{Forward Chaining (Suy diễn tiến)}
+\begin{algorithmic}[1]
+\REQUIRE Knowledge Base ($KB$), tập sự kiện ban đầu ($\text{Facts}$)
+\ENSURE Tập sự kiện đã suy diễn ($\text{WM}$)
+\STATE $\text{WM} \leftarrow \text{Facts}$, $\text{fired} \leftarrow \emptyset$
+\STATE $\text{changed} \leftarrow$ \textbf{true}
+\WHILE{$\text{changed}$}
+    \STATE $\text{changed} \leftarrow$ \textbf{false}
+    \FOR{mỗi clause $c \in KB$}
+        \IF{$c.\text{id} \notin \text{fired}$ \AND $c.\text{antecedents} \subseteq \text{WM}$}
+            \STATE $\text{new} \leftarrow c.\text{consequents} \setminus \text{WM}$
+            \IF{$\text{new} \neq \emptyset$}
+                \STATE $\text{WM} \leftarrow \text{WM} \cup \text{new}$
+                \STATE $\text{fired} \leftarrow \text{fired} \cup \{c.\text{id}\}$
+                \STATE $\text{changed} \leftarrow$ \textbf{true}
+            \ENDIF
+        \ENDIF
+    \ENDFOR
+\ENDWHILE
+\RETURN $\text{WM}$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Trụ cột 5: Mạng Bayes --- Extended Noisy-OR}
+\label{sec:bayes}
+
+Module \texttt{bayes\_risk.py} triển khai Expert-driven Bayesian Network sử dụng Subjectivist Probabilities (xác suất gán bởi chuyên gia, \textbf{không phải} learned from data --- phân biệt với Trụ cột 1).
+
+\textbf{Posterior Inference} (Bayes' Rule trong log-space):
+\begin{equation}
+P(\text{like} \mid F) = \frac{P(\text{like}) \prod_{i} P(f_i \mid \text{like})}{P(\text{like}) \prod_{i} P(f_i \mid \text{like}) + P(\neg\text{like}) \prod_{i} P(f_i \mid \neg\text{like})}
+\end{equation}
+
+\textbf{Extended Noisy-OR Model with Synergy Hidden Causes:}
+\begin{equation}
+P(\text{risk}) = 1 - \prod_{i=1}^{k} (1 - P_i) \times \prod_{j=1}^{m} (1 - P_{\text{synergy}_j})
+\end{equation}
+
+Trong đó $P_i$ là xác suất rủi ro độc lập của yếu tố $i$ (VD: \texttt{chili} $\to$ $P = 0.75$), và $P_{\text{synergy}_j}$ là xác suất rủi ro của tổ hợp hiệp đồng $j$ (VD: \texttt{chili + oil} $\to$ $P = 0.45$). CPT gồm 24 risk factors cá nhân + 8 synergy pairs, tất cả bằng tiếng Anh.
+
+\textit{Tham khảo: Henrion (1989), ``Some Practical Issues in Constructing Belief Networks'', UAI'89.}
+
+\textbf{Expected Utility Theory} (Russell \& Norvig, Ch. 16):
+\begin{equation}
+EU(\text{recipe}) = P(\text{like} \mid E) \times U(\text{like}) - \lambda \times P(\text{risk} \mid I)
+\end{equation}
+Với $\lambda = 0.3$ là hệ số risk-aversion.

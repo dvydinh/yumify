@@ -1,0 +1,149 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% lib.tex - Common packages and settings
+% BTL NMAI - Yumify AI System
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Packages cốt lõi
+\usepackage{float} 
+\usepackage{makecell}
+\usepackage{adjustbox}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{pgfplots}
+\usepackage{scrextend}
+\usepackage{textcomp}
+\changefontsizes{13pt}
+\usepackage{a4wide,amssymb,epsfig,latexsym,array,hhline,fancyhdr}
+\usepackage[normalem]{ulem}
+\usepackage[makeroom]{cancel}
+\usepackage{lastpage}
+\usepackage{tkz-tab}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{rotating}
+\usepackage{amsmath}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{listings}
+\usepackage{listingsutf8}
+\usepackage{eso-pic}
+\usepackage{mathptmx} 
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows, positioning}
+
+% Custom commands
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\pillar}[1]{\textbf{#1}}
+
+% Geometry
+\geometry{left=2cm, right=2cm, top=2cm, bottom=4.5cm}
+
+% Font encoding cho tiếng Việt
+\usepackage[T5]{fontenc}
+\usepackage[utf8]{vietnam}
+
+% Colors
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\definecolor{bku_blue}{RGB}{19,80,180} 
+\definecolor{bku_blue_bold}{RGB}{3,3,100}
+\definecolor{myFacebookBlue}{HTML}{1E90FF}
+
+% Listings style cho code
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    frame=single,
+    rulecolor=\color{black}
+}
+\lstset{style=mystyle}
+
+% JavaScript style
+\lstdefinelanguage{JavaScript}{
+    keywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, let, const, if, in, while, do, else, case, break, async, await, try, throw, class, export, import, this, extends, for, of},
+    keywordstyle=\color{blue}\bfseries,
+    ndkeywords={class, export, boolean, throw, implements, import, this},
+    ndkeywordstyle=\color{darkgray}\bfseries,
+    identifierstyle=\color{black},
+    sensitive=false,
+    comment=[l]{//},
+    morecomment=[s]{/*}{*/},
+    commentstyle=\color{codegreen}\ttfamily,
+    stringstyle=\color{codepurple}\ttfamily,
+    morestring=[b]',
+    morestring=[b]"
+}
+
+% Hyperref settings
+\hypersetup{
+    urlcolor=blue,
+    linkcolor=black,
+    citecolor=black,
+    colorlinks=true
+}
+
+% Header và Footer
+\setlength{\headheight}{40pt}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[L]{
+ \begin{tabular}{rl}
+    \begin{picture}(25,15)(0,0)
+    \put(0,-8){\includegraphics[width=8mm, height=8mm]{images/hcmut.png}}
+   \end{picture}&
+	\begin{tabular}{l}
+	\fontsize{12}{20}\selectfont Trường Đại Học Bách Khoa - ĐHQG Thành Phố Hồ Chí Minh\\
+	 \fontsize{12}{20}\selectfont Khoa Khoa học và Kỹ thuật Máy tính
+	\end{tabular} 	
+ \end{tabular}
+ \vspace{0.5cm}
+}
+\fancyfoot{} 
+\fancyfoot[R]{\fontsize{12}{20}\selectfont Trang {\thepage}/\pageref{LastPage}}
+\renewcommand{\headrulewidth}{0.2pt}
+\renewcommand{\footrulewidth}{0.2pt}
+
+% Subsubsubsection
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{3}
+\makeatletter
+\newcounter {subsubsubsection}[subsubsection]
+\renewcommand\thesubsubsubsection{\thesubsubsection .\@alph\c@subsubsubsection}
+\newcommand\subsubsubsection{\@startsection{subsubsubsection}{4}{\z@}%
+                                    {-3.25ex\@plus -1ex \@minus -.2ex}%
+                                    {1.5ex \@plus .2ex}%
+                                  {\normalfont\normalsize\bfseries}}
+\makeatother
+
+% Paragraph indent and spacing
+\setlength{\parindent}{1.5em}
+\onehalfspacing
+
+% ragged2e cho justify
+\usepackage{ragged2e}
+
+% pgfplots compatibility
+\pgfplotsset{compat=1.18}

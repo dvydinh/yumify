@@ -1,0 +1,188 @@
+% ============================================================
+% 05_experiments.tex — Thực nghiệm
+% ============================================================
+
+\section{Thực nghiệm}
+\label{sec:experiments}
+
+\subsection{Môi trường Thực nghiệm}
+\begin{itemize}
+  \item \textbf{Platform:} Google Colab (Python 3.10, RAM 12GB)
+  \item \textbf{Libraries:} \texttt{numpy}, \texttt{requests} (Pure Python --- không dùng thư viện AI nặng)
+  \item \textbf{Dataset chính:} Kaggle Food.com (5000 recipes qua stratified sampling, 15+ cuisines)
+  \item \textbf{Dataset fallback:} \texttt{recipes.json} (25 recipes, 6 cuisines), \texttt{ingredients.json} (75 nguyên liệu)
+\end{itemize}
+
+\subsection{Phân tích Khám phá Dữ liệu (EDA)}
+
+\subsubsection{Tập cục bộ (\texttt{recipes.json})}
+\begin{itemize}
+    \item 25 công thức, 6 cuisines: Italian (6), Japanese (5), Mexican (5), Western (4), Vietnamese (3), Korean (2)
+    \item Cost range: \$0.99 --- \$40.28, mean \$17.28
+    \item 100\% recipes có trường \texttt{cost} (đã patch cross-reference \texttt{ingredients.json})
+    \item TF-IDF vocabulary: 759 terms, ma trận 25 $\times$ 759
+\end{itemize}
+
+\subsubsection{Tập Kaggle (Food.com)}
+\begin{itemize}
+    \item 230,000+ dòng CSV gốc, parse tối đa 5000 recipes
+    \item Stratified sampling: MAX\_PER\_CUISINE = 625, đảm bảo không quá 12.5\% cho mỗi cuisine
+    \item 3-tier cuisine detection: tag $\to$ recipe name (120+ patterns) $\to$ ingredient signature (80+ patterns)
+    \item Heuristic quantity estimation: Thịt 200g, Hải sản 150g, Rau 100g, Gia vị 5g
+    \item Cost computation: cross-reference \texttt{ingredients.json}, exact $\to$ substring $\to$ category fallback
+\end{itemize}
+
+\subsection{Kịch bản Thực nghiệm}
+
+\subsubsection{Kịch bản 1: NLP Parser}
+Kiểm tra khả năng NER parser trích xuất thực thể từ câu tiếng Anh.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{|p{7cm}|c|c|c|}
+\hline
+\textbf{Đầu vào} & \textbf{Budget} & \textbf{Ingredients} & \textbf{Health} \\
+\hline
+``I want pasta with olive oil for \$8'' & \$8 & olive oil, pasta & --- \\
+\hline
+``Sushi with salmon, budget \$15'' & \$15 & salmon & --- \\
+\hline
+``Beef and chili, I have diabetes'' & --- & beef, chili & diabetes \\
+\hline
+``Chicken soup, no spicy, I have gout'' & --- & chicken & gout \\
+\hline
+``Tofu and mushroom, vegetarian'' & --- & tofu, mushroom & --- \\
+\hline
+\end{tabular}
+\caption{Kịch bản 1: NLP Parser --- Nhận diện thực thể tiếng Anh}
+\label{tab:exp_nlp}
+\end{table}
+
+\subsubsection{Kịch bản 2: Naive Bayes Cuisine Classification}
+Kiểm tra ML classifier trên các tổ hợp nguyên liệu đặc trưng.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{|l|l|c|}
+\hline
+\textbf{Nguyên liệu} & \textbf{Predicted} & \textbf{Confidence} \\
+\hline
+olive oil, tomato sauce, pasta & Italian & 0.549 \\
+\hline
+salmon, sushi rice, wasabi & Japanese & 0.703 \\
+\hline
+beef, fish sauce, lemongrass & Vietnamese & 0.289 \\
+\hline
+tortilla, jalapeno, salsa & Mexican & 0.309 \\
+\hline
+kimchi, gochujang, sesame oil & Japanese* & 0.466 \\
+\hline
+\end{tabular}
+\caption{Kịch bản 2: ML Naive Bayes --- Phân loại cuisine (* Korean chỉ có 2 mẫu trong tập local)}
+\label{tab:exp_ml}
+\end{table}
+
+\subsubsection{Kịch bản 3: A* Search --- Tối ưu hóa meal plan}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{|c|c|c|c|c|l|}
+\hline
+\textbf{Days} & \textbf{Budget} & \textbf{Cost} & \textbf{Nodes} & \textbf{Unique} & \textbf{Plan} \\
+\hline
+3 & \$50 & \$20.73 & 10 & 3/3 & Sushi, Karaage, Enchilada \\
+\hline
+5 & \$80 & \$48.24 & -- & 5/5 & 5 recipes khác nhau \\
+\hline
+3 & \$15 & --- & 1 & --- & FAIL (budget quá thấp) \\
+\hline
+\end{tabular}
+\caption{Kịch bản 3: A* Search --- Repetition Penalty đảm bảo đa dạng}
+\label{tab:exp_astar}
+\end{table}
+
+\textbf{Nhận xét:} Repetition Penalty (exponential + consecutive) đảm bảo 3/3 và 5/5 recipes đều khác nhau. Trước khi áp dụng penalty, A* chọn ``Chicken Enchilada $\times$ 3'' (recipe rẻ nhất lặp lại).
+
+\subsubsection{Kịch bản 4: CSP Solver}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Recipe} & \textbf{Cal range} & \textbf{Calories} & \textbf{Backtracks} & \textbf{Status} \\
+\hline
+Spicy Arrabiata Penne & 200-800 & 790 & 8 & $\checkmark$ \\
+\hline
+\end{tabular}
+\caption{Kịch bản 4: CSP Solver --- Backtracking + Forward Checking}
+\label{tab:exp_csp}
+\end{table}
+
+\subsubsection{Kịch bản 5: Knowledge Base + Bayesian Risk}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{|l|l|c|l|}
+\hline
+\textbf{Condition} & \textbf{Excluded} & \textbf{Safe} & \textbf{Warning} \\
+\hline
+stomachache & chili, garlic, lemon, tomato & 16/25 & Avoid spicy/acidic food \\
+\hline
+gout & beef, mushroom, seafood, shrimp, squid & -- & Avoid red meat \& purine \\
+\hline
+diabetes & sugar & 22/25 & Avoid sugar \& refined carbs \\
+\hline
+(none) & (none) & 25/25 & --- \\
+\hline
+\end{tabular}
+\caption{Kịch bản 5: Knowledge Base Forward Chaining}
+\label{tab:exp_kb}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{|l|c|c|l|}
+\hline
+\textbf{Recipe} & \textbf{P(Risk)} & \textbf{Factors} & \textbf{Ghi chú} \\
+\hline
+Spicy Shrimp Oil Pasta & 0.9970 & 9 & chili + oil + seafood synergy \\
+\hline
+Steamed Vegetables & 0.0000 & 0 & Không có risk factor \\
+\hline
+\end{tabular}
+\caption{Kịch bản 5: Bayesian Risk --- Noisy-OR (condition: stomachache)}
+\label{tab:exp_bayes}
+\end{table}
+
+\subsection{Tổng kết Module Tests}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Module} & \textbf{File} & \textbf{Result} \\
+\hline
+NLP Parser & \texttt{nlp\_parser.py} & PASS \\
+\hline
+ML Classifier (Naive Bayes) & \texttt{ml\_classifier.py} & PASS \\
+\hline
+A* Search (Meal Planner) & \texttt{search\_engine.py} & PASS \\
+\hline
+CSP Solver & \texttt{csp\_solver.py} & PASS \\
+\hline
+Knowledge Base (Forward Chaining) & \texttt{knowledge\_base.py} & PASS \\
+\hline
+Bayesian Risk (Noisy-OR) & \texttt{bayes\_risk.py} & PASS \\
+\hline
+Feature Extractor (TF-IDF) & \texttt{feature\_extractor.py} & PASS \\
+\hline
+\end{tabular}
+\caption{7/7 core modules PASS}
+\label{tab:tests}
+\end{table}

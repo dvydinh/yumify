@@ -1,0 +1,47 @@
+% ============================================================
+% 01_introduction.tex — Giới thiệu
+% ============================================================
+
+\section{Giới thiệu}
+\label{sec:intro}
+
+\subsection{Bối cảnh và Động lực}
+Trong bối cảnh toàn cầu hóa ẩm thực, việc lựa chọn công thức phù hợp với ngân sách, tình trạng sức khỏe và sở thích cá nhân vẫn là bài toán phức tạp --- đặc biệt khi phải cân nhắc đồng thời nhiều ràng buộc: chi phí, dinh dưỡng, và y khoa.
+
+Dự án \textbf{Yumify} xây dựng hệ thống AI toàn diện, tích hợp \textbf{5 trụ cột trí tuệ nhân tạo}: Tìm kiếm (A*), Ràng buộc (CSP), Logic (Forward Chaining), Xác suất (Bayesian Network), và Học máy (Naive Bayes + TF-IDF). Hệ thống hỗ trợ gợi ý công thức nấu ăn đa quốc gia hoàn toàn bằng tiếng Anh.
+
+\subsection{Mô tả Bài toán Thực tế}
+\textbf{Đầu vào:} Người dùng nhập yêu cầu bằng ngôn ngữ tự nhiên tiếng Anh, ví dụ:
+\begin{quote}
+``\textit{I want to cook something with beef and noodle for \$10, I have stomachache}''
+\end{quote}
+
+\textbf{Đầu ra:} Hệ thống trả về danh sách công thức tối ưu, bao gồm:
+\begin{enumerate}
+  \item Phân loại ẩm thực tự động bằng ML (Naive Bayes)
+  \item Danh sách nguyên liệu với chi phí tính từ cross-reference \texttt{ingredients.json}
+  \item Meal plan tối ưu hóa ngân sách (A* Search với Repetition Penalty)
+  \item Kiểm tra ràng buộc dinh dưỡng (CSP Solver với Dual-constraint Pruning)
+  \item Đánh giá rủi ro sức khỏe (Extended Noisy-OR Bayesian Network)
+\end{enumerate}
+
+\subsection{Phạm vi Hệ thống}
+\begin{itemize}
+  \item \textbf{Dataset:} Kaggle Food.com (230,000+ công thức), fallback \texttt{recipes.json} (25 công thức cục bộ, 6 cuisines)
+  \item \textbf{Cuisines (local):} Italian, Japanese, Korean, Mexican, Vietnamese, Western
+  \item \textbf{Cuisines (Kaggle):} Mở rộng lên 15+ cuisines nhờ 3-tier detection (tag $\to$ recipe name $\to$ ingredient signature)
+  \item \textbf{Giao diện:} Google Colab Notebook --- Runtime $\to$ Run All, tự động clone từ GitHub
+  \item \textbf{Ngôn ngữ:} Input/Output hoàn toàn bằng tiếng Anh
+  \item \textbf{Dữ liệu:} Tự động tải từ nguồn công khai (không mount Google Drive)
+\end{itemize}
+
+\subsection{Mục tiêu Dự án}
+\begin{enumerate}
+  \item Phân tích yêu cầu tiếng Anh bằng NLP (Ontology-based NER) --- \textit{ML}
+  \item Phân loại cuisine bằng Multinomial Naive Bayes (learned from data) --- \textit{ML}
+  \item Trích xuất đặc trưng TF-IDF từ dataset công thức --- \textit{ML}
+  \item Tối ưu hóa meal plan N ngày theo ngân sách --- \textit{Search: A*}
+  \item Ràng buộc ngân sách và dinh dưỡng --- \textit{CSP}
+  \item Suy luận quy tắc sức khỏe bằng Forward Chaining --- \textit{Logic}
+  \item Đánh giá rủi ro tiêu hóa bằng Noisy-OR model --- \textit{Bayes}
+\end{enumerate}
