@@ -1,0 +1,169 @@
+\documentclass[a4paper, 12pt]{article}
+
+% Các gói cơ bản
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese]{babel}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{graphicx}
+\usepackage[margin=2cm]{geometry}
+\usepackage{hyperref}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{xcolor}
+
+% Thiết lập màu sắc và link
+\definecolor{bku_blue}{RGB}{3, 36, 155}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=bku_blue,
+    filecolor=magenta,      
+    urlcolor=blue,
+    pdftitle={Báo cáo tiến độ Lần 1},
+}
+
+\begin{document}
+\onehalfspacing
+
+% ============================================================
+% TRANG BÌA
+% ============================================================
+\begin{titlepage}
+\begin{center}
+    \textbf{\large ĐẠI HỌC QUỐC GIA THÀNH PHỐ HỒ CHÍ MINH} \\
+    \textbf{\large TRƯỜNG ĐẠI HỌC BÁCH KHOA} \\
+    \textbf{\large KHOA KHOA HỌC VÀ KỸ THUẬT MÁY TÍNH} \\
+    \vspace{0.5cm}
+    \rule{10cm}{1pt}
+    
+    \vspace{0.1cm}
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=0.2\linewidth]{hcmut.png}
+        \label{fig:placeholder}
+    \end{figure}
+    \vspace{0.1cm}
+    
+    \textcolor{bku_blue}{\textbf{\Large BÁO CÁO TIẾN ĐỘ LẦN 1 - 8/3}} \\
+    \vspace{0.5cm}
+    \textbf{\large MÔN HỌC: NHẬP MÔN TRÍ TUỆ NHÂN TẠO} \\
+ 
+\end{center}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{p{5cm} p{4cm}}
+      \textbf{Giảng viên hướng dẫn:}    & TS. Trương Vĩnh Lân  \\
+       \textbf{Lớp:}  & A01 \\
+        \textbf{Nhóm: } & 5 \\
+    \end{tabular}
+\end{table}
+
+\vspace{2cm}
+\hspace{1.5cm}
+\textbf{Danh sách nhóm:} \\
+
+\begin{center}
+    \begin{tabular}{|c|c|p{5cm}|}
+        \hline
+        \textbf{STT} & \textbf{MSSV} & \textbf{Họ và Tên} \\
+        \hline
+        1 & 2353350 & Đinh Đoàn Vy  \\
+        \hline
+        2 & 2352715 & Trần Thiên Lộc  \\
+        \hline
+        3 & 2352104 & Nguyễn Trần Gia Bảo  \\
+        \hline
+        4 & 2352171 & Dương Lê Nhật Duy  \\
+        \hline
+    \end{tabular}
+\end{center}
+
+\vfill
+\begin{center}
+    \textbf{Thành phố Hồ Chí Minh, Ngày 08 tháng 03 năm 2026}
+\end{center}
+\end{titlepage}
+
+\newpage
+
+% ============================================================
+% NỘI DUNG BÁO CÁO
+% ============================================================
+
+\section{Phân tích chủ đề và ý tưởng dự án}
+Nhóm thống nhất chọn bài toán thực tế hệ gợi ý, cụ thể là "Hệ thống AI gợi ý ẩm thực và tối ưu đa mục tiêu". Dự án không chỉ giải quyết bài toán tối ưu hóa chi phí mua sắm, mà là một hệ thống đánh giá đa mục tiêu: tìm kiếm thực đơn có độ tương đồng cao nhất với yêu cầu nguyên liệu, đồng thời đảm bảo tuân thủ các ràng buộc về y khoa, lượng calo và ngân sách. Hệ thống được ánh xạ trực tiếp vào 5 module bắt buộc của yêu cầu như sau:
+
+\begin{enumerate}[label=\Alph*.]
+    \item Tìm kiếm và biểu diễn: định nghĩa không gian trạng thái là kế hoạch thực đơn đa ngày. Thuật toán A* với heuristic admissible được sử dụng để tìm lộ trình thực đơn nhằm cực tiểu hóa chi phí mua sắm.
+    \item Bài toán thỏa mãn ràng buộc (CSP): giải quyết các điều kiện gắt gao về ngân sách tối đa và lượng calo. Thuật toán áp dụng heuristic MRV kết hợp forward checking (2 chiều) để cắt tỉa sớm không gian tìm kiếm.
+    \item Suy luận tri thức: xây dựng hệ chuyên gia sử dụng thuật toán suy diễn tiến (forward chaining) để lọc và loại bỏ các nguyên liệu không phù hợp dựa trên tình trạng bệnh lý của người dùng.
+    \item Xác suất và mạng Bayes: thiết lập mạng Bayes để đánh giá rủi ro tiêu hóa và sở thích người dùng. Quyết định lọc món ăn cuối cùng được đưa ra dựa trên độ thỏa dụng kỳ vọng (expected utility).
+    \item Học máy: sử dụng thuật toán multinomial naive Bayes để học và tự động phân loại phong cách ẩm thực từ tập dữ liệu có nhãn, sau đó áp dụng giả gán nhãn chéo (cross-dataset pseudo-labeling) để chuẩn hóa dữ liệu chưa có nhãn. Quá trình tra cứu công thức được thực hiện thông qua phương pháp đối sánh tập hợp và chuỗi con (set/substring matching).
+\end{enumerate}
+
+\section{Tài nguyên, dữ liệu và nghiên cứu}
+Dự án tuân thủ nghiêm ngặt quy định không sử dụng lưu trữ đám mây cá nhân. Hệ thống hoạt động thông qua các bộ dữ liệu nội bộ được cấu trúc chuẩn hóa:
+
+\begin{itemize}
+    \item Tập dữ liệu huấn luyện học máy: sử dụng \textbf{Recipe Ingredients Dataset} (\href{https://www.kaggle.com/datasets/kaggle/recipe-ingredients-dataset/data}{Yummly}) chứa các công thức đã được gán nhãn chuẩn xác để huấn luyện mô hình naive Bayes.
+    \item Tập dữ liệu cơ sở tri thức: sử dụng \textbf{Food.com Recipes} (\href{https://www.kaggle.com/datasets/shuyangli94/food-com-recipes-and-user-interactions}{Kaggle}) với hơn 230.000 công thức làm không gian tìm kiếm cho thuật toán A* và CSP. 
+    \item Kho lưu trữ luật: các tệp cấu trúc tri thức như {rules.json} (luật y khoa) và {ingredients.json} (cơ sở dữ liệu giá tiền, lượng calo) được đóng gói và quản lý phiên bản trên nền tảng GitHub.
+\end{itemize}
+
+\section{Các task đã hoàn thành (tính đến tuần 1 - 08/03)}
+Sau buổi họp khởi động dự án, các thành viên đã thảo luận và đi đến thống nhất các nội dung phục vụ cho việc lập kế hoạch:
+\begin{itemize}
+    \item Nhóm thống nhất lựa chọn đề tài gợi ý ẩm thực và tối ưu ngân sách vì bài toán này cho phép tích hợp tự nhiên 5 trụ cột thuật toán AI truyền thống mà không phụ thuộc vào các API bên ngoài.
+    \item Đã tìm kiếm và đánh giá thành công các nguồn dữ liệu nền tảng, cụ thể là chốt tập dữ liệu Food.com (Kaggle) để làm không gian trạng thái tìm kiếm và tập Recipe Ingredients Dataset (Yummly) phục vụ huấn luyện mô hình học máy. 
+    \item Nhóm thống nhất phương án quản lý dữ liệu thông qua nguồn mở và mã nguồn chung trên nền tảng GitHub với cấu trúc thư mục tiêu chuẩn, tuân thủ tuyệt đối quy định không sử dụng Google Drive cá nhân.
+    \item Nhóm thống nhất lộ trình thời gian chi tiết và tỷ lệ đóng góp dự kiến là 25\% chia đều cho cả 4 thành viên nhằm đảm bảo tiến độ và khối lượng công việc hợp lý.
+\end{itemize}
+
+\section{Timeline chi tiết}
+Để làm căn cứ đánh giá tiến độ và phân bổ tài nguyên, dự án được phân rã thành 4 giai đoạn bám sát các mốc nộp báo cáo định kỳ của môn học. Các chức năng mở rộng có thể được bổ sung tùy thuộc vào quỹ thời gian thực tế.
+
+\begin{table}[h!]
+    \centering
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabularx}{\textwidth}{|c|X|c|}
+        \hline
+        \textbf{Mốc nộp báo cáo} & \textbf{Mục tiêu chính của giai đoạn} & \textbf{Trạng thái} \\
+        \hline
+        08/03/2026 & Khởi tạo dự án: phân tích kiến trúc AI, thống nhất nền tảng, lập kế hoạch và phân chia công việc. & Hoàn thành \\
+        \hline
+        22/03/2026 & Tiền xử lý và lập trình nền tảng: hoàn thành phân tích dữ liệu (EDA), lập trình xong các module cơ sở bao gồm xử lý ngôn ngữ, tải dữ liệu và hệ chuyên gia. & Đang thực hiện \\
+        \hline
+        12/04/2026 & Cài đặt lõi thuật toán AI: lập trình các module tìm kiếm (A*), thỏa mãn ràng buộc (CSP), phân lớp (naive Bayes) và đánh giá xác suất (mạng Bayes). & Chưa bắt đầu \\
+        \hline
+        26/04/2026 & Tích hợp hệ thống: ghép nối luồng xử lý dữ liệu và kiểm thử trên giao diện Google Colab. Có thể mở rộng đánh giá hiệu năng nếu thời gian cho phép. & Chưa bắt đầu \\
+        \hline
+        10/05/2026 & Hoàn thiện cuối kỳ: tinh chỉnh tham số mô hình, kiểm tra lỗi toàn hệ thống, xuất báo cáo tổng kết và nộp bài. & Chưa bắt đầu \\
+        \hline
+    \end{tabularx}
+\end{table}
+
+\section{Phân công nhiệm vụ kỳ tới (Đến 22/03/2026)}
+Trong hai tuần tới, nhóm BẮT BUỘC phải hoàn tất khâu chuẩn bị tài nguyên và tiến hành lập trình ngay các module nền tảng. Yêu cầu đầu ra cho mốc 22/03 là mỗi thành viên phải hoàn thành ít nhất 1 tệp mã nguồn python (.py) có thể chạy unit test độc lập.
+
+\begin{table}[h!]
+    \centering
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabularx}{\textwidth}{|p{3.5cm}|p{4cm}|X|}
+        \hline
+        \textbf{Thành viên} & \textbf{module phụ trách} & \textbf{Công việc chi tiết cần hoàn thành} \\
+        \hline
+        Đinh Đoàn Vy & Phân tích dữ liệu và tiền xử lý ML & Thực hiện phân tích khám phá dữ liệu (EDA) trên tập Yummly. Lập trình xong module {nlp\_parser.py} (sử dụng regex rút trích thực thể) và bộ khung ban đầu cho {ml\_classifier.py}. \\
+        \hline
+        Trần Thiên Lộc & Tri thức cơ sở và lập trình logic & Chuẩn hóa dữ liệu y khoa thành tệp {rules.json}. Lập trình hoàn thiện module {knowledge\_base.py} áp dụng suy diễn tiến (forward chaining) để lọc nguyên liệu. \\
+        \hline
+        Nguyễn Trần Gia Bảo & Cấu trúc dữ liệu và thiết lập bộ giải & Thiết lập từ điển nguyên liệu cục bộ {ingredients.json} (giá tiền, lượng calo). Lập trình khung cơ bản cho module {csp\_solver.py} (định nghĩa biến, miền giá trị và hàm cắt tỉa cơ sở). \\
+        \hline
+        Dương Lê Nhật Duy & Môi trường chạy và luồng dữ liệu & Lập trình module {data\_loader.py} tự động tải tập dữ liệu Kaggle và Yummly. Khởi tạo cấu trúc luồng chạy chính trong tệp {main\_frontend.ipynb} để kết nối các module. \\
+        \hline
+    \end{tabularx}
+\end{table}
+
+\end{document}

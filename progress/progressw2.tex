@@ -1,0 +1,135 @@
+\documentclass[a4paper, 12pt]{article}
+
+% Các gói cơ bản
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese]{babel}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{graphicx}
+\usepackage[margin=2cm]{geometry}
+\usepackage{hyperref}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{xcolor}
+
+% Thiết lập màu sắc và link
+\definecolor{bku_blue}{RGB}{3, 36, 155}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=bku_blue,
+    filecolor=magenta,      
+    urlcolor=blue,
+    pdftitle={Báo cáo tiến độ Lần 2},
+}
+
+\begin{document}
+\onehalfspacing
+
+% ============================================================
+% TRANG BÌA
+% ============================================================
+\begin{titlepage}
+\begin{center}
+    \textbf{\large ĐẠI HỌC QUỐC GIA THÀNH PHỐ HỒ CHÍ MINH} \\
+    \textbf{\large TRƯỜNG ĐẠI HỌC BÁCH KHOA} \\
+    \textbf{\large KHOA KHOA HỌC VÀ KỸ THUẬT MÁY TÍNH} \\
+    \vspace{0.5cm}
+    \rule{10cm}{1pt}
+    
+    \vspace{0.1cm}
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=0.2\linewidth]{hcmut.png}
+    \end{figure}
+    \vspace{0.1cm}
+    
+    \textcolor{bku_blue}{\textbf{\Large BÁO CÁO TIẾN ĐỘ LẦN 2 - 22/3}} \\
+    \vspace{0.5cm}
+    \textbf{\large MÔN HỌC: NHẬP MÔN TRÍ TUỆ NHÂN TẠO} \\
+ 
+\end{center}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{p{5cm} p{4cm}}
+      \textbf{Giảng viên hướng dẫn:}    & TS. Trương Vĩnh Lân  \\
+       \textbf{Lớp:}  & A01 \\
+        \textbf{Nhóm: } & 5 \\
+    \end{tabular}
+\end{table}
+
+\vspace{2cm}
+\hspace{1.5cm}
+\textbf{Danh sách nhóm:} \\
+
+\begin{center}
+    \begin{tabular}{|c|c|p{5cm}|}
+        \hline
+        \textbf{STT} & \textbf{MSSV} & \textbf{Họ và Tên} \\
+        \hline
+        1 & 2353350 & Đinh Đoàn Vy  \\
+        \hline
+        2 & 2352715 & Trần Thiên Lộc  \\
+        \hline
+        3 & 2352104 & Nguyễn Trần Gia Bảo  \\
+        \hline
+        4 & 2352171 & Dương Lê Nhật Duy  \\
+        \hline
+    \end{tabular}
+\end{center}
+
+\vfill
+\begin{center}
+    \textbf{Thành phố Hồ Chí Minh, Ngày 22 tháng 03 năm 2026}
+\end{center}
+\end{titlepage}
+
+\newpage
+
+% ============================================================
+% NỘI DUNG BÁO CÁO
+% ============================================================
+
+\section{Tổng quan tiến độ (Tính đến 22/03/2026)}
+Đến thời điểm báo cáo lần 2, nhóm đã đi được một nửa chặng đường của dự án Yumify. Nhóm đã hoàn thành toàn bộ công đoạn thu thập, phân tích và tiền xử lý dữ liệu. Các module cơ sở như Xử lý ngôn ngữ tự nhiên (NLP) và Hệ chuyên gia chuẩn đoán logic mệnh đề (Knowledge Base) đã được lập trình hoàn thiện và kiểm thử thành công trên môi trường cục bộ.
+
+\section{Những nhiệm vụ đã hoàn thành}
+Nhóm đã phối hợp và hoàn tất các nhiệm vụ nền tảng sau:
+\begin{itemize}
+    \item Cài đặt thành công module xử lý ngôn ngữ tự nhiên. Đã lập trình xong quy trình nhận diện thực thể (NER) để bóc tách thông tin từ chuỗi truy vấn tiếng Anh của người dùng.
+    \item Định hình xong module trích xuất đặc trưng TF-IDF cho hệ thống đánh giá độ tương đồng văn bản.
+    \item Hoàn thiện thiết kế Hệ cơ sở tri thức (Knowledge Base). Cấu trúc thành công các bộ luật về y khoa, đồng thời cài đặt thuật toán suy diễn tiến (Forward Chaining) sử dụng logic mệnh đề để đối chiếu nguyên liệu.
+    \item Xử lý xong Data Layer. Đã lập trình các kết nối tự động tải bộ dữ liệu công thức ăn chuẩn hóa từ nền tảng Kaggle về môi trường Colab.
+    \item Xây dựng bộ khung sườn của giao diện frontend trên nền tảng. Tiến hành phân tích dữ liệu khám phá (EDA) và thống kê dữ liệu.
+\end{itemize}
+
+\section{Khó khăn gặp phải và giải pháp}
+Trong giai đoạn này, nhóm đã giải quyết được một số vấn đề liên quan đến dữ liệu:
+\begin{itemize}
+    \item Tập dữ liệu gốc không cung cấp định lượng khối lượng (số gram) cho từng nguyên liệu, khiến việc tính toán chi phí cấu thành cho từng công thức không thể thực hiện (do không có tỷ lệ khối lượng để nhân với đơn giá). Nhóm đã khắc phục bằng cách áp dụng bộ chuẩn USDA Standard Portion Sizes để gán tự động khối lượng tiêu chuẩn (VD: Thịt 200g, Rau 100g) cho từng danh mục nguyên liệu phục vụ riêng cho bước ánh xạ ngân sách.
+    \item Dữ liệu có sự mất cân bằng nhóm món ăn khi đa phần dữ liệu thuộc nhãn ẩm thực quốc tế, gây khó khăn cho việc huấn luyện mô hình. Nhóm đã cài đặt cơ chế nhận diện đa tầng kết hợp với thuật toán Stratified Cuisine Sampling để giới hạn số lượng công thức, giúp phân phối chuẩn hơn.
+\end{itemize}
+
+\section{Phân công nhiệm vụ kỳ tới (Đến 12/04)}
+Giai đoạn từ tuần 5 đến tuần 8, nhóm tập trung phát triển các thuật toán AI cốt lõi:
+\begin{table}[h!]
+    \centering
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabularx}{\textwidth}{|p{4.5cm}|X|}
+        \hline
+        \textbf{Thành viên} & \textbf{Công việc chi tiết cần hoàn thành} \\
+        \hline
+        Đinh Đoàn Vy  & Tinh chỉnh TF-IDF vectorization để đánh giá độ tương đồng cosine của toàn bộ công thức và đưa vào mô hình Học máy. \\
+        \hline
+        Trần Thiên Lộc & Cài đặt Mạng xác suất Bayes (Bayes Risk Network) sử dụng mô hình Extended Noisy-OR và định cấu hình các bảng xác suất tĩnh. \\
+        \hline
+        Nguyễn Trần Gia Bảo & Lập trình thuật toán thỏa mãn ràng buộc (CSP) xử lý định mức calo, ngân sách; và cài đặt thuật toán A* tìm kiếm kế hoạch thực đơn. \\
+        \hline
+        Dương Lê Nhật Duy  & Lập trình thuật toán Multinomial Naive Bayes để phân loại phong cách ẩm thực từ văn bản và đánh giá độ chính xác của mô hình. \\
+        \hline
+    \end{tabularx}
+\end{table}
+
+\end{document}

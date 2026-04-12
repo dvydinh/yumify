@@ -28,7 +28,7 @@ Khi nạp dataset Kaggle Food.com (5000 recipes qua Stratified Sampling), hệ t
 |-----------|------|-------|
 | Đinh Đoàn Vy | 2353350 | vy.dinhdoan2005@hcmut.edu.vn |
 | Trần Thiên Lộc | 2352715 | loc.tranthien3905@hcmut.edu.vn |
-| Nguyễn Trần Gia Bảo | 2352103 | bao.nguyentrangia@hcmut.edu.vn |
+| Nguyễn Trần Gia Bảo | 2352104 | bao.nguyentrangia@hcmut.edu.vn |
 | Dương Lê Nhật Duy | 2352171 | duy.duong250405@hcmut.edu.vn |
 
 ---

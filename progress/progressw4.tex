@@ -1,0 +1,135 @@
+\documentclass[a4paper, 12pt]{article}
+
+% Các gói cơ bản
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese]{babel}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{graphicx}
+\usepackage[margin=2cm]{geometry}
+\usepackage{hyperref}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{xcolor}
+
+% Thiết lập màu sắc và link
+\definecolor{bku_blue}{RGB}{3, 36, 155}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=bku_blue,
+    filecolor=magenta,      
+    urlcolor=blue,
+    pdftitle={Báo cáo tiến độ Lần 3},
+}
+
+\begin{document}
+\onehalfspacing
+
+% ============================================================
+% TRANG BÌA
+% ============================================================
+\begin{titlepage}
+\begin{center}
+    \textbf{\large ĐẠI HỌC QUỐC GIA THÀNH PHỐ HỒ CHÍ MINH} \\
+    \textbf{\large TRƯỜNG ĐẠI HỌC BÁCH KHOA} \\
+    \textbf{\large KHOA KHOA HỌC VÀ KỸ THUẬT MÁY TÍNH} \\
+    \vspace{0.5cm}
+    \rule{10cm}{1pt}
+    
+    \vspace{0.1cm}
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=0.2\linewidth]{hcmut.png}
+    \end{figure}
+    \vspace{0.1cm}
+    
+    \textcolor{bku_blue}{\textbf{\Large BÁO CÁO TIẾN ĐỘ LẦN 3 - 12/4}} \\
+    \vspace{0.5cm}
+    \textbf{\large MÔN HỌC: NHẬP MÔN TRÍ TUỆ NHÂN TẠO} \\
+ 
+\end{center}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{p{5cm} p{4cm}}
+      \textbf{Giảng viên hướng dẫn:}    & TS. Trương Vĩnh Lân  \\
+       \textbf{Lớp:}  & A01 \\
+        \textbf{Nhóm: } & 5 \\
+    \end{tabular}
+\end{table}
+
+\vspace{2cm}
+\hspace{1.5cm}
+\textbf{Danh sách nhóm:} \\
+
+\begin{center}
+    \begin{tabular}{|c|c|p{5cm}|}
+        \hline
+        \textbf{STT} & \textbf{MSSV} & \textbf{Họ và Tên} \\
+        \hline
+        1 & 2353350 & Đinh Đoàn Vy  \\
+        \hline
+        2 & 2352715 & Trần Thiên Lộc  \\
+        \hline
+        3 & 2352104 & Nguyễn Trần Gia Bảo  \\
+        \hline
+        4 & 2352171 & Dương Lê Nhật Duy  \\
+        \hline
+    \end{tabular}
+\end{center}
+
+\vfill
+\begin{center}
+    \textbf{Thành phố Hồ Chí Minh, Ngày 12 tháng 04 năm 2026}
+\end{center}
+\end{titlepage}
+
+\newpage
+
+% ============================================================
+% NỘI DUNG BÁO CÁO
+% ============================================================
+
+\section{Tổng quan tiến độ (Tính đến 12/04/2026)}
+Đây là báo cáo tổng kết giai đoạn cốt lõi của học kỳ. Tính đến mốc thời gian này, dự án Yumify đã hoàn thành phần lớn chặng đường với toàn bộ 5 trụ cột thuật toán AI được lập trình hoàn chỉnh. Các thuật toán nặng như A* Search, Mạng xác suất Bayes và Multinomial Naive Bayes đã hoạt động ổn định ở môi trường lập trình cục bộ. Nhóm hiện đang tiến tới việc tích hợp toàn bộ luồng xử lý trên nền tảng notebook.
+
+\section{Những nhiệm vụ đã hoàn thành}
+Nhóm đã triển khai cài đặt thành công kiến trúc giải thuật hệ thống:
+\begin{itemize}
+    \item Liên kết ma trận vector TF-IDF vào hệ thống và khởi chạy mượt mà module tự động lọc công thức theo chuẩn cosine.
+    \item Hoàn tất Mạng Bayes mở rộng (Extended Noisy-OR Model), kết hợp tích hợp phương pháp đánh giá rủi ro có xét tác động hiệp đồng của nguyên liệu để đưa ra độ thỏa dụng kỳ vọng.
+    \item Cài đặt hoàn chỉnh bộ giải bài toán ràng buộc (CSP Solver) thông qua thuật toán cắt tỉa nhánh đôi rà cận trên giới hạn calo.
+    \item Triển khai thuật toán tìm kiếm thông tin theo đồ thị tìm kiếm (A* Search) sử dụng cấu trúc phạt tần suất xuất hiện linh hoạt.
+    \item Xây dựng thành công mô hình học máy (Naive Bayes Classifier) bằng phương pháp Multinomial qua kỹ thuật chuẩn hóa log để phân tích và đánh nhãn dữ liệu ẩm thực đầu vào.
+\end{itemize}
+
+\section{Khó khăn gặp phải và giải pháp}
+Trong quá trình triển khai cấu trúc giải thuật quy mô lớn, nhóm đã giải quyết ổn thỏa một vài cản trở về tối ưu thuật toán:
+\begin{itemize}
+    \item Việc tìm kiếm lộ trình cho nhiều ngày trên tập dữ liệu đồ sộ làm thuật toán A* dễ bị quá tải bộ nhớ do số lượng trạng thái gia tăng liên tục. Nhóm đã nghiên cứu và đưa vào kỹ thuật cấu trúc trạng thái chuẩn hóa (Canonical State Representation), kết hợp hàm phạt (Repetition Penalty) nhằm giảm thiểu triệt để số lượng biến trạng thái.
+    \item Ràng buộc cùng lúc hai chỉ số mục tiêu calo và ngân sách là rất khó đối với bộ giải CSP đơn thuần. Nhóm đã bổ sung quy tắc cắt tỉa nhánh giới hạn kép trong quá trình thiết lập biến và quét các bước kế thừa nhánh, giúp giảm đáng kể thời gian duyệt trần.
+\end{itemize}
+
+\section{Phân công nhiệm vụ kỳ tới (Đến 26/04/2026)}
+Nhóm sẽ tập trung tích hợp và hoàn thành báo cáo:
+\begin{table}[h!]
+    \centering
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabularx}{\textwidth}{|p{4.5cm}|X|}
+        \hline
+        \textbf{Thành viên} & \textbf{Công việc chi tiết cần hoàn thành} \\
+        \hline
+        Đinh Đoàn Vy  & Tối ưu hóa đường truyền luồng dữ liệu giữa xử lý ngôn ngữ và học máy. Tập hợp và viết tập lệnh hướng dẫn cho dự án. \\
+        \hline
+        Trần Thiên Lộc & Rà soát lại việc ánh xạ từ khóa của Logic mệnh đề sang mạng Bayesian nhằm loại trừ triệt để các trường hợp ngoại lệ. \\
+        \hline
+        Nguyễn Trần Gia Bảo & Theo dõi và kiểm tra tính tương thích của toàn bộ tệp hệ thống trên máy chủ từ xa nhằm đảm bảo sự ổn định của hệ thống. \\
+        \hline
+        Dương Lê Nhật Duy  & Biên soạn tài liệu kỹ thuật cuối cùng cho báo cáo tổng kết, tạo bản minh họa và đóng gói toàn bộ hồ sơ nộp môn học. \\
+        \hline
+    \end{tabularx}
+\end{table}
+
+\end{document}
